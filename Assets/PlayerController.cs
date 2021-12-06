@@ -14,7 +14,8 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(RumbleCoroutine());
+        // SwitchJoyConRHID.current.SetStandardReportMode();
+        // StartCoroutine(RumbleCoroutine());
     }
 
     // Update is called once per frame

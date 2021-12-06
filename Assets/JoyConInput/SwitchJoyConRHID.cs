@@ -74,6 +74,16 @@ public class SwitchJoyConRHID : Joystick
         }
     }
 
+    public void SetStandardReportMode()
+    {
+        var c = SwitchJoyConCommand.Create(command: new SwitchJoyConInputModeSubcommand());
+        long returned = ExecuteCommand(ref c);
+        if (returned < 0)
+        {
+            Debug.LogError("Set standard report mode failed");
+        }
+    }
+
     /// <summary>
     /// The last used/added Joy-Con (R) controller.
     /// </summary>

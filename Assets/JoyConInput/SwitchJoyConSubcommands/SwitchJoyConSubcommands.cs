@@ -16,7 +16,7 @@ public struct SwitchJoyConBaseSubcommandStruct
 {
     public byte subcommandId;
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 40)]
     public byte[] arguments;
 }
 
@@ -35,12 +35,17 @@ public class SwitchJoyConBaseSubcommand
     protected virtual byte[] GetArguments() => new byte[0x1];
 }
 
+public class SwitchJoyConEmptySubcommand : SwitchJoyConBaseSubcommand
+{
+    public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.GetOnlyControllerState;
+}
+
 public enum SwitchJoyConSubcommandID
 {
     GetOnlyControllerState = 0x00,
     BluetoothManualPairing = 0x01,
     RequestDeviceInfo = 0x02,
-    SetImportReportMode = 0x03,
+    SetInputReportMode = 0x03,
     TriggerButtonsElapsedTime = 0x04,
     GetPageListState = 0x05,
     SetHCIState = 0x06,

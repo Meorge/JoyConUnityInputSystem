@@ -30,24 +30,31 @@ internal struct SwitchJoyConCommand : IInputDeviceCommandInfo
     public SwitchJoyConBaseSubcommandStruct subcommand;
 
     
-    public static SwitchJoyConCommand Create(SwitchJoyConRumbleProfile rumbleProfile)
+    public static SwitchJoyConCommand Create(SwitchJoyConRumbleProfile? rumbleProfile = null, SwitchJoyConBaseSubcommand command = null)
     {
-
-        var rumbleData = new SwitchJoyConRumbleData
-        {
-            leftJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create(
-                highBandFrequency: rumbleProfile.highBandFrequencyL,
-                highBandAmplitude: rumbleProfile.highBandAmplitudeL,
-                lowBandFrequency: rumbleProfile.lowBandFrequencyL,
-                lowBandAmplitude: rumbleProfile.lowBandAmplitudeL
-            ),
-            rightJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create(
-                highBandFrequency: rumbleProfile.highBandFrequencyR,
-                highBandAmplitude: rumbleProfile.highBandAmplitudeR,
-                lowBandFrequency: rumbleProfile.lowBandFrequencyR,
-                lowBandAmplitude: rumbleProfile.lowBandAmplitudeR
-            )
-        };
+        SwitchJoyConRumbleData rumbleData;
+        if (rumbleProfile != null)
+            rumbleData = new SwitchJoyConRumbleData
+            {
+                leftJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create(
+                    highBandFrequency: rumbleProfile.Value.highBandFrequencyL,
+                    highBandAmplitude: rumbleProfile.Value.highBandAmplitudeL,
+                    lowBandFrequency: rumbleProfile.Value.lowBandFrequencyL,
+                    lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeL
+                ),
+                rightJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create(
+                    highBandFrequency: rumbleProfile.Value.highBandFrequencyR,
+                    highBandAmplitude: rumbleProfile.Value.highBandAmplitudeR,
+                    lowBandFrequency: rumbleProfile.Value.lowBandFrequencyR,
+                    lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeR
+                )
+            };
+        else
+            rumbleData = new SwitchJoyConRumbleData
+            {
+                leftJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create(),
+                rightJoyConRumble = SwitchJoyConRumbleAmpFreqData.Create()
+            };
 
         var subcommand = new SwitchJoyConLEDSubcommand(
                 p1: SwitchJoyConLEDStatus.Off,
