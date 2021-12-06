@@ -10,11 +10,45 @@ public class RumbleTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        SwitchJoyConRHID.current.RequestDeviceInfo();
-        SwitchJoyConRHID.current.SetStandardReportMode();
+        // SwitchJoyConRHID.current.RequestDeviceInfo();
+        // SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Simple);
+
+        // Not being done: calibration data (not sure how to do this with Input System)
+
+        // Bluetooth pairing
+        // SwitchJoyConRHID.current.DoBluetoothPairing();
+
+        // Setting LEDs
+        // SwitchJoyConRHID.current.SetLEDs(
+        //     p1: SwitchJoyConLEDStatus.On,
+        //     p2: SwitchJoyConLEDStatus.Off,
+        //     p3: SwitchJoyConLEDStatus.Off,
+        //     p4: SwitchJoyConLEDStatus.On
+        // );
+
+        // Setting IMU to active
+        // SwitchJoyConRHID.current.SetIMUEnabled(true);
+
+        // Setting input report mode to standard
+        SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Standard);
+
+        // Enabling vibration (seems to already be enabled)
+        // SwitchJoyConRHID.current.SetVibrationEnabled(true);
+
         StartCoroutine(RumbleCoroutine());
     }
 
+    void Update() {
+        if (SwitchJoyConRHID.current.buttonSouth.wasPressedThisFrame) {
+            // SwitchJoyConRHID.current.SetLEDs(
+            //     p1: SwitchJoyConLEDStatus.On,
+            //     p2: SwitchJoyConLEDStatus.On,
+            //     p3: SwitchJoyConLEDStatus.Flashing,
+            //     p4: SwitchJoyConLEDStatus.On
+            // );
+            Debug.Log("button got pressed!");
+        }
+    }
 
     IEnumerator RumbleCoroutine()
     {

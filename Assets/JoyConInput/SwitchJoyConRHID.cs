@@ -1,14 +1,11 @@
 using System;
-using System.ComponentModel;
-using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Switch.LowLevel;
-using UnityEngine.InputSystem.Utilities;
+using System.Runtime.InteropServices;
 
 [InputControlLayout(stateType = typeof(SwitchJoyConRHIDInputState), displayName = "Joy-Con (R)")]
 #if UNITY_EDITOR
@@ -49,19 +46,19 @@ public class SwitchJoyConRHID : InputDevice
     {
         Debug.Log("in finish setup");
 
-        // hat = GetChildControl<DpadControl>("hat");
-        // plus = GetChildControl<ButtonControl>("plus");
-        // stickPress = GetChildControl<ButtonControl>("stickPress");
-        // home = GetChildControl<ButtonControl>("home");
-        // r = GetChildControl<ButtonControl>("r");
-        // zr = GetChildControl<ButtonControl>("zr");
+        hat = GetChildControl<DpadControl>("hat");
+        plus = GetChildControl<ButtonControl>("plus");
+        stickPress = GetChildControl<ButtonControl>("stickPress");
+        home = GetChildControl<ButtonControl>("home");
+        r = GetChildControl<ButtonControl>("r");
+        zr = GetChildControl<ButtonControl>("zr");
 
-        // buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
-        // buttonEast = GetChildControl<ButtonControl>("buttonEast");
-        // buttonWest = GetChildControl<ButtonControl>("buttonWest");
-        // buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
-        // sl = GetChildControl<ButtonControl>("sl");
-        // sr = GetChildControl<ButtonControl>("sr");
+        buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+        buttonEast = GetChildControl<ButtonControl>("buttonEast");
+        buttonWest = GetChildControl<ButtonControl>("buttonWest");
+        buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+        sl = GetChildControl<ButtonControl>("sl");
+        sr = GetChildControl<ButtonControl>("sr");
 
         base.FinishSetup();
     }
@@ -78,7 +75,7 @@ public class SwitchJoyConRHID : InputDevice
 
     public void RequestDeviceInfo()
     {
-        var c = SwitchJoyConCommand.Create(command: new SwitchJoyConRequestInfoSubcommand());
+        var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
         long returned = ExecuteCommand(ref c);
         if (returned < 0)
         {
@@ -86,14 +83,86 @@ public class SwitchJoyConRHID : InputDevice
         }
     }
 
-    public void SetStandardReportMode()
+    public void DoBluetoothPairing()
     {
-        var c = SwitchJoyConCommand.Create(command: new SwitchJoyConInputModeSubcommand());
-        long returned = ExecuteCommand(ref c);
-        if (returned < 0)
-        {
-            Debug.LogError("Set standard report mode failed");
-        }
+        // step 1
+        var s1 = new SwitchJoyConBluetoothManualPairingSubcommand();
+        s1.ValueByte = 0x01;
+        var c1 = SwitchJoyConCommand.Create(subcommand: s1);
+
+        var s2 = new SwitchJoyConBluetoothManualPairingSubcommand();
+        s2.ValueByte = 0x02;
+        var c2 = SwitchJoyConCommand.Create(subcommand: s2);
+
+        var s3 = new SwitchJoyConBluetoothManualPairingSubcommand();
+        s3.ValueByte = 0x03;
+        var c3 = SwitchJoyConCommand.Create(subcommand: s3);
+        
+        if (ExecuteCommand(ref c1) < 0)
+            Debug.LogError("Step 1 of bluetooth pairing failed");
+
+        if (ExecuteCommand(ref c2) < 0)
+            Debug.LogError("Step 2 of bluetooth pairing failed");
+
+        if (ExecuteCommand(ref c3) < 0)
+            Debug.LogError("Step 3 of bluetooth pairing failed");
+    }
+
+    public void SetInputReportMode(SwitchJoyConInputMode mode)
+    {
+        var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
+
+        Debug.Log(CommandToBytes(c));
+        
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError($"Set report mode to {mode} failed");
+    }
+
+    public void SetIMUEnabled(bool active)
+    {
+        var s = new SwitchJoyConSetIMUEnabledSubcommand();
+        s.Enabled = active;
+
+        var c = SwitchJoyConCommand.Create(subcommand: s);
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError($"Set IMU active to {active} failed");
+    }
+
+    public void SetVibrationEnabled(bool active)
+    {
+        var s = new SwitchJoyConSetVibrationEnabledSubcommand();
+        s.Enabled = active;
+
+        var c = SwitchJoyConCommand.Create(subcommand: s);
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError($"Set vibration active to {active} failed");
+    }
+
+    public void SetLEDs(
+        SwitchJoyConLEDStatus p1 = SwitchJoyConLEDStatus.Off,
+        SwitchJoyConLEDStatus p2 = SwitchJoyConLEDStatus.Off,
+        SwitchJoyConLEDStatus p3 = SwitchJoyConLEDStatus.Off,
+        SwitchJoyConLEDStatus p4 = SwitchJoyConLEDStatus.Off)
+    {
+        var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
+
+        Debug.Log(CommandToBytes(c));
+
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError("Set LEDs failed");
+    }
+
+    private string CommandToBytes(SwitchJoyConCommand command)
+    {
+        int size = Marshal.SizeOf(command);
+        byte[] arr = new byte[size];
+
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(command, ptr, true);
+        Marshal.Copy(ptr, arr, 0, size);
+        Marshal.FreeHGlobal(ptr);
+
+        return BitConverter.ToString(arr).Replace("-", " ");
     }
 
     /// <summary>

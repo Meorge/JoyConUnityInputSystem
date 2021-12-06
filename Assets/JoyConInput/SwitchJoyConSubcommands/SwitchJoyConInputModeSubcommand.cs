@@ -23,4 +23,9 @@ public class SwitchJoyConInputModeSubcommand : SwitchJoyConBaseSubcommand
     public SwitchJoyConInputMode InputMode = SwitchJoyConInputMode.Standard;
 
     protected override byte[] GetArguments() => new byte[1] { (byte)InputMode };
+
+    public SwitchJoyConInputModeSubcommand(SwitchJoyConInputMode mode)
+    {
+        InputMode = mode;
+    }
 }

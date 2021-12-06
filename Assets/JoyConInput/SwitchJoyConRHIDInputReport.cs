@@ -16,13 +16,13 @@ struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
     public FourCC format => new FourCC('H', 'I', 'D');
     [FieldOffset(0)] public byte reportId;
 
-    // [InputControl(name = "buttonSouth", displayName = "A", layout = "Button", format = "BIT ", bit = 0)]
-    // [InputControl(name = "buttonEast", displayName = "X", layout = "Button", format = "BIT ", bit = 1)]
-    // [InputControl(name = "buttonWest", displayName = "B", layout = "Button", format = "BIT ", bit = 2)]
-    // [InputControl(name = "buttonNorth", displayName = "Y", layout = "Button", format = "BIT ", bit = 3)]
-    // [InputControl(name = "sl", displayName = "SL", layout = "Button", format = "BIT ", bit = 4)]
-    // [InputControl(name = "sr", displayName = "SR", layout = "Button", format = "BIT ", bit = 5)]
-    [InputControl(name = "something", displayName = "Something", layout = "Integer", format = "BYTE")]
+    [InputControl(name = "buttonSouth", displayName = "A", layout = "Button", format = "BIT ", bit = 0)]
+    [InputControl(name = "buttonEast", displayName = "X", layout = "Button", format = "BIT ", bit = 1)]
+    [InputControl(name = "buttonWest", displayName = "B", layout = "Button", format = "BIT ", bit = 2)]
+    [InputControl(name = "buttonNorth", displayName = "Y", layout = "Button", format = "BIT ", bit = 3)]
+    [InputControl(name = "sl", displayName = "SL", layout = "Button", format = "BIT ", bit = 4)]
+    [InputControl(name = "sr", displayName = "SR", layout = "Button", format = "BIT ", bit = 5)]
+    // [InputControl(name = "something", displayName = "Something", layout = "Integer", format = "BYTE")]
     [FieldOffset(1)]
     public byte buttons1;
 

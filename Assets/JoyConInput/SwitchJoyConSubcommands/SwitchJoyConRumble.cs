@@ -33,13 +33,23 @@ internal struct SwitchJoyConRumbleAmpFreqData
     [FieldOffset(2)] public byte lowBandFreq;
     [FieldOffset(3)] public byte lowBandAmplitude;
 
-    public static SwitchJoyConRumbleAmpFreqData Create()
+    public static SwitchJoyConRumbleAmpFreqData CreateNeutral()
     {
         return new SwitchJoyConRumbleAmpFreqData {
             highBandLowerFreq = 0x00,
             highBandAmplitude = 0x01,
             lowBandFreq = 0x40,
             lowBandAmplitude = 0x40
+        };
+    }
+
+    public static SwitchJoyConRumbleAmpFreqData CreateEmpty()
+    {
+        return new SwitchJoyConRumbleAmpFreqData {
+            highBandLowerFreq = 0x00,
+            highBandAmplitude = 0x00,
+            lowBandFreq = 0x00,
+            lowBandAmplitude = 0x00
         };
     }
 

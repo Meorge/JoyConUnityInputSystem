@@ -11,25 +11,31 @@ using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Collections;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct SwitchJoyConBaseSubcommandStruct
+[StructLayout(LayoutKind.Explicit, Size = 0x40)]
+public unsafe struct SwitchJoyConBaseSubcommandStruct
 {
+    [FieldOffset(0)]
     public byte subcommandId;
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 40)]
-    public byte[] arguments;
+    [FieldOffset(1)]
+    public fixed byte arguments[0x40 - 10 - 1];
 }
 
 public class SwitchJoyConBaseSubcommand
 {
     public virtual byte SubcommandID { get; }
 
-    public SwitchJoyConBaseSubcommandStruct GetSubcommand()
+    public unsafe SwitchJoyConBaseSubcommandStruct GetSubcommand()
     {
-        return new SwitchJoyConBaseSubcommandStruct {
-            subcommandId = SubcommandID,
-            arguments = GetArguments()
+        var subcommand = new SwitchJoyConBaseSubcommandStruct
+        {
+            subcommandId = SubcommandID
         };
+
+        IntPtr ptr = new IntPtr((void*)subcommand.arguments);
+        Marshal.Copy(GetArguments(), 0, ptr, 1);
+
+        return subcommand;
     }
 
     protected virtual byte[] GetArguments() => new byte[0x1] { 0x00 };
@@ -45,7 +51,31 @@ public class SwitchJoyConRequestInfoSubcommand : SwitchJoyConBaseSubcommand
     public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.RequestDeviceInfo;
 }
 
-public enum SwitchJoyConSubcommandID
+public class SwitchJoyConBluetoothManualPairingSubcommand : SwitchJoyConBaseSubcommand
+{
+    public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.BluetoothManualPairing;
+
+    public byte ValueByte = 0x01;
+    protected override byte[] GetArguments() => new byte[0x1] { ValueByte };
+}
+
+public class SwitchJoyConSetIMUEnabledSubcommand : SwitchJoyConBaseSubcommand
+{
+    public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.EnableDisableIMU;
+
+    public bool Enabled = true;
+    protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
+}
+
+public class SwitchJoyConSetVibrationEnabledSubcommand : SwitchJoyConBaseSubcommand
+{
+    public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.EnableDisableVibration;
+
+    public bool Enabled = true;
+    protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
+}
+
+public enum SwitchJoyConSubcommandID : byte
 {
     GetOnlyControllerState = 0x00,
     BluetoothManualPairing = 0x01,

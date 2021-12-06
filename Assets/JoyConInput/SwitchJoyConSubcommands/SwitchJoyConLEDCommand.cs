@@ -34,10 +34,7 @@ public class SwitchJoyConLEDSubcommand : SwitchJoyConBaseSubcommand
 
     protected override byte[] GetArguments()
     {
-        var b = new byte[0x10];
-        Array.Clear(b, 0, b.Length);
-        b[0] = (byte)((byte)Player1LED | (byte)Player2LED << 1 | (byte)Player3LED << 2 | (byte)Player4LED << 3);
-        return b;
+        return new byte[0x1] { (byte)((byte)Player1LED | (byte)Player2LED << 1 | (byte)Player3LED << 2 | (byte)Player4LED << 3) };
     }
 }
 
