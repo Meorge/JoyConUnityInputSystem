@@ -10,12 +10,13 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-[InputControlLayout(stateType = typeof(SwitchJoyConRHIDInputState), displayName = "Joy-Con (R) Custom")]
+[InputControlLayout(stateType = typeof(SwitchJoyConRHIDInputState), displayName = "Joy-Con (R)")]
 #if UNITY_EDITOR
 [InitializeOnLoad]
 #endif
-public class SwitchJoyConRHID : Joystick
+public class SwitchJoyConRHID : InputDevice
 {
+    public DpadControl hat { get; protected set; }
     public ButtonControl plus { get; protected set; }
     public ButtonControl stickPress { get; protected set; }
     public ButtonControl home { get; protected set; }
@@ -48,18 +49,19 @@ public class SwitchJoyConRHID : Joystick
     {
         Debug.Log("in finish setup");
 
-        plus = GetChildControl<ButtonControl>("plus");
-        stickPress = GetChildControl<ButtonControl>("stickPress");
-        home = GetChildControl<ButtonControl>("home");
-        r = GetChildControl<ButtonControl>("r");
-        zr = GetChildControl<ButtonControl>("zr");
+        // hat = GetChildControl<DpadControl>("hat");
+        // plus = GetChildControl<ButtonControl>("plus");
+        // stickPress = GetChildControl<ButtonControl>("stickPress");
+        // home = GetChildControl<ButtonControl>("home");
+        // r = GetChildControl<ButtonControl>("r");
+        // zr = GetChildControl<ButtonControl>("zr");
 
-        buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
-        buttonEast = GetChildControl<ButtonControl>("buttonEast");
-        buttonWest = GetChildControl<ButtonControl>("buttonWest");
-        buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
-        sl = GetChildControl<ButtonControl>("sl");
-        sr = GetChildControl<ButtonControl>("sr");
+        // buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+        // buttonEast = GetChildControl<ButtonControl>("buttonEast");
+        // buttonWest = GetChildControl<ButtonControl>("buttonWest");
+        // buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+        // sl = GetChildControl<ButtonControl>("sl");
+        // sr = GetChildControl<ButtonControl>("sr");
 
         base.FinishSetup();
     }
@@ -71,6 +73,16 @@ public class SwitchJoyConRHID : Joystick
         if (returned < 0)
         {
             Debug.LogError("Rumble command failed");
+        }
+    }
+
+    public void RequestDeviceInfo()
+    {
+        var c = SwitchJoyConCommand.Create(command: new SwitchJoyConRequestInfoSubcommand());
+        long returned = ExecuteCommand(ref c);
+        if (returned < 0)
+        {
+            Debug.LogError("Request device info failed");
         }
     }
 
@@ -87,7 +99,7 @@ public class SwitchJoyConRHID : Joystick
     /// <summary>
     /// The last used/added Joy-Con (R) controller.
     /// </summary>
-    public new static SwitchJoyConRHID current { get; private set; }
+    public static SwitchJoyConRHID current { get; private set; }
 
     /// <inheritdoc />
     public override void MakeCurrent()

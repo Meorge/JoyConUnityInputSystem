@@ -24,7 +24,9 @@ public class PlayerController : MonoBehaviour
         transform.Translate(new Vector3(m_movement.x, 0, m_movement.y));
 
         amp = (Mathf.Sin(Time.time) + 1) / 2;
-        Debug.Log(amp);
+
+        Debug.Log($"From Update: {SwitchJoyConRHID.current.hat.ReadValue()}");
+        // Debug.Log(amp);
     }
 
     IEnumerator RumbleCoroutine()
@@ -44,7 +46,8 @@ public class PlayerController : MonoBehaviour
 
     void OnMove(InputValue value)
     {
-        m_movement = value.Get<Vector2>() * 0.2f;
+        m_movement = value.Get<Vector2>();
+        Debug.Log($"From OnMove: {m_movement}");
     }
 
     void OnFire()

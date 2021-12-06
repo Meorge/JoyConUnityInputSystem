@@ -48,7 +48,7 @@
                 {
                     "name": "",
                     "id": "62cd053c-2a64-4180-95f2-964739bc6e25",
-                    "path": "<SwitchJoyConRHID>/buttonSouth",
+                    "path": "<SwitchJoyConRHID>/hat/up",
                     "interactions": "",
                     "processors": "",
                     "groups": "Joy-Cons;Keyboard&Mouse",

@@ -32,12 +32,17 @@ public class SwitchJoyConBaseSubcommand
         };
     }
 
-    protected virtual byte[] GetArguments() => new byte[0x1];
+    protected virtual byte[] GetArguments() => new byte[0x1] { 0x00 };
 }
 
 public class SwitchJoyConEmptySubcommand : SwitchJoyConBaseSubcommand
 {
     public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.GetOnlyControllerState;
+}
+
+public class SwitchJoyConRequestInfoSubcommand : SwitchJoyConBaseSubcommand
+{
+    public override byte SubcommandID => (byte)SwitchJoyConSubcommandID.RequestDeviceInfo;
 }
 
 public enum SwitchJoyConSubcommandID

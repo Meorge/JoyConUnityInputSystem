@@ -1183,7 +1183,59 @@ MonoBehaviour:
   m_ControlsChangedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: e47d6c88-fdff-4805-9057-403f6f044a28
+    m_ActionName: Player/Move[/SwitchJoyConRHID/hat]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 9e03c2b3-e9fd-4787-b88d-079c98c1057b
+    m_ActionName: Player/Look
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 994520ce-3bae-4929-bc54-fc5b9fd01d25
+    m_ActionName: Player/Fire[/SwitchJoyConRHID/hat/up]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: e32758fd-871e-436a-8cc7-057e9d3562de
+    m_ActionName: UI/Navigate[/Keyboard/w,/Keyboard/upArrow,/Keyboard/s,/Keyboard/downArrow,/Keyboard/a,/Keyboard/leftArrow,/Keyboard/d,/Keyboard/rightArrow]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 34828721-21a3-4acc-931a-d00813f9e553
+    m_ActionName: UI/Submit[/Keyboard/enter]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: c47b2761-67fd-4ff7-b905-5c7473285cd7
+    m_ActionName: UI/Cancel[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 3a6160ef-283e-4543-ac15-89d378bca020
+    m_ActionName: UI/Point[/Mouse/position,/Pen/position]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 26915592-977f-436d-8a20-491e6322ac56
+    m_ActionName: UI/Click[/Mouse/leftButton,/Pen/tip]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: b9c1474f-f140-4c1c-82aa-9608c049972f
+    m_ActionName: UI/ScrollWheel[/Mouse/scroll]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: e2c787e1-b346-4c5c-9808-dc2db6ff8466
+    m_ActionName: UI/MiddleClick[/Mouse/middleButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 3d733d24-bb16-4b12-a645-5745f66c2272
+    m_ActionName: UI/RightClick[/Mouse/rightButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: e19a228f-e669-4962-a97c-b462a87686e1
+    m_ActionName: UI/TrackedDevicePosition
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 96eb0974-f87c-44cc-8748-efaa03fc093f
+    m_ActionName: UI/TrackedDeviceOrientation
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: Joy-Cons
   m_DefaultActionMap: Player
