@@ -52,50 +52,41 @@ unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
     [FieldOffset(5)]
     public byte leftButtons;
 
-
+    [FieldOffset(6)] public fixed byte leftStick[3];
     [FieldOffset(9)] public fixed byte rightStick[3];
 
-    // [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
-    // [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    // [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    // [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
-    // [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    // [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    // [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
-    // [FieldOffset(6)] public byte leftStick1;
-    // [FieldOffset(7)] public byte leftStick2;
-    // [FieldOffset(8)] public byte leftStick3;
+    [FieldOffset(12)] public byte vibratorInputReport;
+
+    // For 0x21 (Subcommand replies)
+    [FieldOffset(13)] public byte subcommandAck;
+    [FieldOffset(14)] public byte subcommandReplyId;
+    [FieldOffset(15)] public fixed byte subcommandReplyData[35];
 
 
-    // [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
-    // [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    // [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    // [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
-    // [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    // [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    // [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
-    // [FieldOffset(9)] public byte rightStick1;
-    // [FieldOffset(10)] public byte rightStick2;
-    // [FieldOffset(11)] public byte rightStick3;
+    // For 0x23 (NFC/IR MCU FW)
+    [FieldOffset(13)] public fixed byte nfcIRMCUFWDataInputReport[37];
 
+    // For 0x30, 0x31, 0x32, 0x33 (normal mode)
+    [FieldOffset(13)] public IMUData imuData0ms;
+    [FieldOffset(25)] public IMUData imuData5ms;
+    [FieldOffset(37)] public IMUData imuData10ms;
 
-    // [FieldOffset(12)] public byte vibratorInputReport;
-
-    // [FieldOffset(13)] public byte subcommandAck;
-
-    // [FieldOffset(14)] public byte subcommandReplyId;
-
-    // [FieldOffset(15)] public ushort firmwareVersion;
-
-    // [FieldOffset(15 + 2)] public byte controllerType;
-
-    // [FieldOffset(15 + 3)] public byte shouldBe02;
-    // [FieldOffset(15 + 10)] public byte shouldBe01;
-
-    // [FieldOffset(15 + 11)] public byte useSPIColors;
+    // For 0x31 (NFC/IR?)
+    [FieldOffset(49)] public fixed byte nfcIRDataInputReport[313];
 
 
     // TODO: figure out how to force the size of this struct without doing this
     [InputControl(name = "makeItBig", displayName = "big", layout = "Button", format = "BIT", bit = 0)]
     [FieldOffset(361)] public byte ho;
+}
+
+[StructLayout(LayoutKind.Explicit, Size = 96)]
+struct IMUData {
+    [FieldOffset(0)] short accelX;
+    [FieldOffset(2)] short accelY;
+    [FieldOffset(4)] short accelZ;
+
+    [FieldOffset(6)] short gyro1;
+    [FieldOffset(8)] short gyro2;
+    [FieldOffset(10)] short gyro3;
 }

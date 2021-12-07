@@ -186,13 +186,14 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             current = null;
     }
 
-    public int rightStickHoriz = 0;
-    public int rightStickVert = 0;
+    public int rightStickHoriz { get; protected set; } = 0;
+    public int rightStickVert { get; protected set; } = 0;
+
+    public int leftStickHoriz { get; protected set; } = 0;
+    public int leftStickVert { get; protected set; } = 0;
 
     public unsafe void OnUpdate()
     {
-        // Debug.Log("OnUpdate ====");
-
         var currentState = new SwitchJoyConRHIDInputState();
         this.CopyState(out currentState);
         
@@ -204,42 +205,39 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         int controllerTypeGlobal = (connectionInfo >> 1) & 3;
         int powerType = connectionInfo & 1;
 
-        // // Right analog stick data
-        var rightStick0 = currentState.rightStick[0];
-        var rightStick1 = currentState.rightStick[1];
-        var rightStick2 = currentState.rightStick[2];
+        // Left analog stick data
+        var l0 = currentState.rightStick[0];
+        var l1 = currentState.rightStick[1];
+        var l2 = currentState.rightStick[2];
+        leftStickHoriz = l0 | ((l1 & 0xF) << 8);
+        leftStickVert = (l1 >> 4) | (l2 << 4);
 
-        rightStickHoriz = rightStick0 | ((rightStick1 & 0xF) << 8);
-        rightStickVert = (rightStick1 >> 4) | (rightStick2 << 4);
+        // Right analog stick data
+        var r0 = currentState.rightStick[0];
+        var r1 = currentState.rightStick[1];
+        var r2 = currentState.rightStick[2];
+        rightStickHoriz = r0 | ((r1 & 0xF) << 8);
+        rightStickVert = (r1 >> 4) | (r2 << 4);
 
-        if (buttonSouthR.isPressed)
+        if (reportType == 0x21)
         {
-            Debug.Log($"sizeInBits={stateBlock.sizeInBits}");
-            Debug.Log(ThingToHexString(currentState));
+            int subcommandReplyId = currentState.subcommandReplyId;
+            int ack = currentState.subcommandAck;
+
+            Debug.Log("Subcommand received");
+
+            Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
+            Debug.Log($"Timer is {currentState.timer}");
+            Debug.Log($"Subcommand response for {subcommandReplyId:X2}: {ack:X2}");
+
+            var subcommandWasAcknowledged = (ack & 0x80) != 0;
+            if (subcommandWasAcknowledged)
+            {
+                Debug.Log("Subcommand was acknoledged!");
+
+                int controllerType = currentState.subcommandReplyData[2];
+                Debug.Log($"Controller type: {controllerType:X2}");
+            }
         }
-
-        // if (reportType == 0x21)
-        // {
-        //     int subcommandReplyId = currentState.subcommandReplyId;
-        //     int ack = currentState.subcommandAck;
-
-        //     Debug.Log("Subcommand received");
-        //     // Debug.Log(ThingToHexString(currentState));
-
-        //     // Debug.Log($"{rightStickHoriz}, {rightStickVert}");
-
-        //     Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
-        //     Debug.Log($"Timer is {currentState.timer}");
-        //     Debug.Log($"Subcommand response for {subcommandReplyId:X2}: {ack:X2}");
-
-        //     var subcommandWasAcknowledged = (ack & 0x80) != 0;
-        //     if (subcommandWasAcknowledged)
-        //     {
-        //         Debug.Log("Subcommand was acknoledged!");
-
-        //         int controllerType = currentState.controllerType;
-        //         Debug.Log($"Controller type: {controllerType:X2}");
-        //     }
-        // }
     }
 }
