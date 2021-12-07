@@ -32,7 +32,6 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
     
     [FieldOffset(InputDeviceCommand.BaseCommandSize + 1)]
     public byte globalCount;
-
     
     
     [FieldOffset(InputDeviceCommand.BaseCommandSize + 2)]

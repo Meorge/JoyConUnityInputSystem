@@ -14,6 +14,7 @@ public enum SwitchJoyConInputMode
 {
     Standard = 0x30,
     NFCOrIR = 0x31,
+    ReadSubcommands = 0x21,
     Simple = 0x3F
 }
 

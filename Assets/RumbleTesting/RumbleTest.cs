@@ -19,15 +19,15 @@ public class RumbleTest : MonoBehaviour
         // SwitchJoyConRHID.current.DoBluetoothPairing();
 
         // Setting LEDs
-        // SwitchJoyConRHID.current.SetLEDs(
-        //     p1: SwitchJoyConLEDStatus.On,
-        //     p2: SwitchJoyConLEDStatus.Off,
-        //     p3: SwitchJoyConLEDStatus.Off,
-        //     p4: SwitchJoyConLEDStatus.On
-        // );
+        SwitchJoyConRHID.current.SetLEDs(
+            p1: SwitchJoyConLEDStatus.On,
+            p2: SwitchJoyConLEDStatus.Off,
+            p3: SwitchJoyConLEDStatus.Off,
+            p4: SwitchJoyConLEDStatus.On
+        );
 
         // Setting IMU to active
-        // SwitchJoyConRHID.current.SetIMUEnabled(true);
+        SwitchJoyConRHID.current.SetIMUEnabled(true);
 
         // Setting input report mode to standard
         SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Standard);
@@ -39,15 +39,15 @@ public class RumbleTest : MonoBehaviour
     }
 
     void Update() {
-        if (SwitchJoyConRHID.current.buttonSouth.wasPressedThisFrame) {
-            // SwitchJoyConRHID.current.SetLEDs(
-            //     p1: SwitchJoyConLEDStatus.On,
-            //     p2: SwitchJoyConLEDStatus.On,
-            //     p3: SwitchJoyConLEDStatus.Flashing,
-            //     p4: SwitchJoyConLEDStatus.On
-            // );
-            Debug.Log("button got pressed!");
-        }
+        // if (SwitchJoyConRHID.current.buttonSouth.wasPressedThisFrame) {
+        //     // SwitchJoyConRHID.current.SetLEDs(
+        //     //     p1: SwitchJoyConLEDStatus.On,
+        //     //     p2: SwitchJoyConLEDStatus.On,
+        //     //     p3: SwitchJoyConLEDStatus.Flashing,
+        //     //     p4: SwitchJoyConLEDStatus.On
+        //     // );
+        //     Debug.Log("button got pressed!");
+        // }
     }
 
     IEnumerator RumbleCoroutine()

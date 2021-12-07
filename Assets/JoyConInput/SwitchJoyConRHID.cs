@@ -29,12 +29,18 @@ public class SwitchJoyConRHID : InputDevice
 
     static SwitchJoyConRHID()
     {
-        var matcher = new InputDeviceMatcher()
+        var matcherR = new InputDeviceMatcher()
             .WithInterface("HID")
             .WithCapability("vendorId", 0x57E)
             .WithCapability("productId", 0x2007);
 
-        InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcher);
+        var matcherL = new InputDeviceMatcher()
+            .WithInterface("HID")
+            .WithCapability("vendorId", 0x57E)
+            .WithCapability("productId", 0x2006);
+
+        InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherR);
+        InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherL);
 
         Debug.Log($"Joy-Con (R) layout registered");
     }
@@ -46,19 +52,19 @@ public class SwitchJoyConRHID : InputDevice
     {
         Debug.Log("in finish setup");
 
-        hat = GetChildControl<DpadControl>("hat");
-        plus = GetChildControl<ButtonControl>("plus");
-        stickPress = GetChildControl<ButtonControl>("stickPress");
-        home = GetChildControl<ButtonControl>("home");
-        r = GetChildControl<ButtonControl>("r");
-        zr = GetChildControl<ButtonControl>("zr");
+        // hat = GetChildControl<DpadControl>("hat");
+        // plus = GetChildControl<ButtonControl>("plus");
+        // stickPress = GetChildControl<ButtonControl>("stickPress");
+        // home = GetChildControl<ButtonControl>("home");
+        // r = GetChildControl<ButtonControl>("r");
+        // zr = GetChildControl<ButtonControl>("zr");
 
-        buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
-        buttonEast = GetChildControl<ButtonControl>("buttonEast");
-        buttonWest = GetChildControl<ButtonControl>("buttonWest");
-        buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
-        sl = GetChildControl<ButtonControl>("sl");
-        sr = GetChildControl<ButtonControl>("sr");
+        // buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+        // buttonEast = GetChildControl<ButtonControl>("buttonEast");
+        // buttonWest = GetChildControl<ButtonControl>("buttonWest");
+        // buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+        // sl = GetChildControl<ButtonControl>("sl");
+        // sr = GetChildControl<ButtonControl>("sr");
 
         base.FinishSetup();
     }
@@ -113,7 +119,7 @@ public class SwitchJoyConRHID : InputDevice
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
 
         Debug.Log(CommandToBytes(c));
-        
+
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError($"Set report mode to {mode} failed");
     }
