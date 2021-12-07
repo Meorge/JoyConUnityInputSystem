@@ -11,8 +11,18 @@ using System.Runtime.InteropServices;
 #if UNITY_EDITOR
 [InitializeOnLoad]
 #endif
-public class SwitchJoyConRHID : InputDevice
+public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 {
+    
+    public IntegerControl reportId;
+    public IntegerControl subcommandAck;
+    public IntegerControl subcommandReplyId;
+    public IntegerControl firmwareVersion;
+    public IntegerControl controllerType;
+    public IntegerControl shouldBe02;
+    public IntegerControl shouldBe01;
+    public IntegerControl useSPIColors;
+
     public DpadControl hat { get; protected set; }
     public ButtonControl plus { get; protected set; }
     public ButtonControl stickPress { get; protected set; }
@@ -20,10 +30,10 @@ public class SwitchJoyConRHID : InputDevice
     public ButtonControl r { get; protected set; }
     public ButtonControl zr { get; protected set; }
 
-    public ButtonControl buttonSouth { get; protected set; }
-    public ButtonControl buttonEast { get; protected set; }
-    public ButtonControl buttonWest { get; protected set; }
-    public ButtonControl buttonNorth { get; protected set; }
+    public ButtonControl buttonSouthR { get; protected set; }
+    public ButtonControl buttonEastR { get; protected set; }
+    public ButtonControl buttonWestR { get; protected set; }
+    public ButtonControl buttonNorthR { get; protected set; }
     public ButtonControl sl { get; protected set; }
     public ButtonControl sr { get; protected set; }
 
@@ -52,6 +62,16 @@ public class SwitchJoyConRHID : InputDevice
     {
         Debug.Log("in finish setup");
 
+        reportId = GetChildControl<IntegerControl>("reportId");
+        subcommandAck = GetChildControl<IntegerControl>("subcommandAck");
+        subcommandReplyId = GetChildControl<IntegerControl>("subcommandReplyId");
+        firmwareVersion = GetChildControl<IntegerControl>("firmwareVersion");
+        controllerType = GetChildControl<IntegerControl>("controllerType");
+        shouldBe02 = GetChildControl<IntegerControl>("shouldBe02");
+        shouldBe01 = GetChildControl<IntegerControl>("shouldBe01");
+        useSPIColors = GetChildControl<IntegerControl>("useSPIColors");
+
+
         // hat = GetChildControl<DpadControl>("hat");
         // plus = GetChildControl<ButtonControl>("plus");
         // stickPress = GetChildControl<ButtonControl>("stickPress");
@@ -59,10 +79,10 @@ public class SwitchJoyConRHID : InputDevice
         // r = GetChildControl<ButtonControl>("r");
         // zr = GetChildControl<ButtonControl>("zr");
 
-        // buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
-        // buttonEast = GetChildControl<ButtonControl>("buttonEast");
-        // buttonWest = GetChildControl<ButtonControl>("buttonWest");
-        // buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+        buttonSouthR = GetChildControl<ButtonControl>("buttonSouthR");
+        buttonEastR = GetChildControl<ButtonControl>("buttonEastR");
+        buttonWestR = GetChildControl<ButtonControl>("buttonWestR");
+        buttonNorthR = GetChildControl<ButtonControl>("buttonNorthR");
         // sl = GetChildControl<ButtonControl>("sl");
         // sr = GetChildControl<ButtonControl>("sr");
 
@@ -189,5 +209,19 @@ public class SwitchJoyConRHID : InputDevice
         base.OnRemoved();
         if (current == this)
             current = null;
+    }
+
+    public void OnUpdate()
+    {
+        int reportType = reportId.ReadValue();
+
+        if (reportType == 0x21)
+        {
+            Debug.Log($"Got a subcommand response for {subcommandReplyId.ReadValue()} with acknowledgement {subcommandAck.ReadValue()}");
+            Debug.Log($"Firmware version: {firmwareVersion.ReadValue()}");
+            Debug.Log($"Controller type: {controllerType.ReadValue()}");
+            Debug.Log($"02: {shouldBe02.ReadValue()}, 01: {shouldBe01.ReadValue()}");
+            Debug.Log($"Use SPI Colors: {useSPIColors.ReadValue()}");
+        }
     }
 }

@@ -14,6 +14,8 @@ using UnityEngine.InputSystem.Utilities;
 unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
 {
     public FourCC format => new FourCC('H', 'I', 'D');
+
+    [InputControl(name = "reportId", displayName = "Report ID", layout = "Integer", format = "BYTE")]
     [FieldOffset(0)] public byte reportId;
 
     // [InputControl(name = "timer", displayName = "Timer", layout = "Integer", format = "BYTE")]
@@ -120,36 +122,37 @@ unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
     // [FieldOffset(20)]
     // public byte field20;
 
+    [InputControl(name = "subcommandAck", displayName = "Subcommand Acknowledgement", layout = "Integer", format = "BYTE")]
+    [FieldOffset(13)]
+    public byte subcommandAck;
+
+    [InputControl(name = "subcommandReplyId", displayName = "Subcommand Reply ID", layout = "Integer", format = "BYTE")]
+    [FieldOffset(14)]
+    public byte subcommandReplyId;
+
+    // [InputControl(name = "subcommandReply", displayName = "Subcommand Reply Data", layout = "Integer", format = "BYTE", arraySize = 35)]
+    // [FieldOffset(15)] public fixed byte subcommandReplyData[35]; // TODO: make it an array
+
+    [InputControl(name = "firmwareVersion", displayName = "Firmware Version", layout = "Integer", format = "USHT")]
+    [FieldOffset(15)]
+    public ushort firmwareVersion;
+
+    [InputControl(name = "controllerType", displayName = "Controller Type", layout = "Integer", format = "BYTE")]
+    [FieldOffset(15 + 2)]
+    public byte controllerType;
+
+    [InputControl(name = "shouldBe02", displayName = "Should be 02", layout = "Integer", format = "BYTE")]
+    [FieldOffset(15 + 3)]
+    public byte shouldBe02;
 
 
+    
+    [InputControl(name = "shouldBe01", displayName = "Should be 01", layout = "Integer", format = "BYTE")]
+    [FieldOffset(15 + 10)]
+    public byte shouldBe01;
 
-    // [FieldOffset(15)]
-    // public fixed byte subcommandReplyData[35]; // TODO: make it an array
-
-    // [InputControl(name = "buttonSouth", displayName = "A", layout = "Button", format = "BIT ", bit = 0)]
-    // [InputControl(name = "buttonEast", displayName = "X", layout = "Button", format = "BIT ", bit = 1)]
-    // [InputControl(name = "buttonWest", displayName = "B", layout = "Button", format = "BIT ", bit = 2)]
-    // [InputControl(name = "buttonNorth", displayName = "Y", layout = "Button", format = "BIT ", bit = 3)]
-    // [InputControl(name = "sl", displayName = "SL", layout = "Button", format = "BIT ", bit = 4)]
-    // [InputControl(name = "sr", displayName = "SR", layout = "Button", format = "BIT ", bit = 5)]
-    // // [InputControl(name = "something", displayName = "Something", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(1)]
-    // public byte buttons1;
-
-    // [InputControl(name = "plus", displayName = "+", layout = "Button", bit = 1)]
-    // [InputControl(name = "stickPress", displayName = "Stick Press", layout = "Button", bit = 3)]
-    // [InputControl(name = "home", displayName = "Home", layout = "Button", bit = 4)]
-    // [InputControl(name = "r", displayName = "R", layout = "Button", bit = 6)]
-    // [InputControl(name = "zr", displayName = "ZR", layout = "Button", bit = 7)]
-    // [FieldOffset(2)]
-    // public byte buttons2;
-
-    // [InputControl(name = "hat", displayName = "Stick", layout = "Dpad", format = "BIT ", sizeInBits = 4, bit = 0)]
-    // [InputControl(name = "hat/up", displayName = "Up", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", format = "BIT ", sizeInBits = 4, bit = 0)]
-    // [InputControl(name = "hat/right", displayName = "Right", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", format = "BIT ", sizeInBits = 4, bit = 0)]
-    // [InputControl(name = "hat/down", displayName = "Down", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", format = "BIT ", sizeInBits = 4, bit = 0)]
-    // [InputControl(name = "hat/left", displayName = "Left", layout = "DiscreteButton", parameters = "minValue=5,maxValue=7", format = "BIT ", sizeInBits = 4, bit = 0)]
-    // [FieldOffset(3)]
-    // public byte stick;
+    [InputControl(name = "useSPIColors", displayName = "Use Colors from SPI?", layout = "Integer", format = "BYTE")]
+    [FieldOffset(15 + 11)]
+    public byte useSPIColors;
 }
 

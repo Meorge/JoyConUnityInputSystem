@@ -39,15 +39,17 @@ public class RumbleTest : MonoBehaviour
     }
 
     void Update() {
-        // if (SwitchJoyConRHID.current.buttonSouth.wasPressedThisFrame) {
-        //     // SwitchJoyConRHID.current.SetLEDs(
-        //     //     p1: SwitchJoyConLEDStatus.On,
-        //     //     p2: SwitchJoyConLEDStatus.On,
-        //     //     p3: SwitchJoyConLEDStatus.Flashing,
-        //     //     p4: SwitchJoyConLEDStatus.On
-        //     // );
-        //     Debug.Log("button got pressed!");
-        // }
+        if (SwitchJoyConRHID.current.buttonSouthR.wasPressedThisFrame) {
+            // SwitchJoyConRHID.current.SetLEDs(
+            //     p1: SwitchJoyConLEDStatus.On,
+            //     p2: SwitchJoyConLEDStatus.On,
+            //     p3: SwitchJoyConLEDStatus.Flashing,
+            //     p4: SwitchJoyConLEDStatus.On
+            // );
+
+            SwitchJoyConRHID.current.RequestDeviceInfo();
+            Debug.Log("button got pressed!");
+        }
     }
 
     IEnumerator RumbleCoroutine()
