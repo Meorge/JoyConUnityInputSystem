@@ -52,8 +52,6 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
     
     public static SwitchJoyConCommand Create(SwitchJoyConRumbleProfile? rumbleProfile = null, SwitchJoyConBaseSubcommand subcommand = null)
     {
-        Debug.Log($"base command size is {InputDeviceCommand.BaseCommandSize}");
-
         SwitchJoyConRumbleData rumbleData;
         if (rumbleProfile != null)
             rumbleData = new SwitchJoyConRumbleData
@@ -74,8 +72,8 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
         else
             rumbleData = new SwitchJoyConRumbleData
             {
-                leftJoyConRumble = SwitchJoyConRumbleAmpFreqData.CreateNeutral(),
-                rightJoyConRumble = SwitchJoyConRumbleAmpFreqData.CreateNeutral()
+                leftJoyConRumble = SwitchJoyConRumbleAmpFreqData.CreateEmpty(),
+                rightJoyConRumble = SwitchJoyConRumbleAmpFreqData.CreateEmpty()
             };
 
         if (subcommand == null)

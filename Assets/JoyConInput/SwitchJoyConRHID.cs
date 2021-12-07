@@ -13,19 +13,8 @@ using System.Runtime.InteropServices;
 #endif
 public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 {
-    
-    public IntegerControl reportId;
-    public IntegerControl subcommandAck;
-    public IntegerControl subcommandReplyId;
-    public IntegerControl firmwareVersion;
-    public IntegerControl controllerType;
-    public IntegerControl shouldBe02;
-    public IntegerControl shouldBe01;
-    public IntegerControl useSPIColors;
-
-    public DpadControl hat { get; protected set; }
     public ButtonControl plus { get; protected set; }
-    public ButtonControl stickPress { get; protected set; }
+    public ButtonControl stickPressR { get; protected set; }
     public ButtonControl home { get; protected set; }
     public ButtonControl r { get; protected set; }
     public ButtonControl zr { get; protected set; }
@@ -34,8 +23,8 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     public ButtonControl buttonEastR { get; protected set; }
     public ButtonControl buttonWestR { get; protected set; }
     public ButtonControl buttonNorthR { get; protected set; }
-    public ButtonControl sl { get; protected set; }
-    public ButtonControl sr { get; protected set; }
+    public ButtonControl slR { get; protected set; }
+    public ButtonControl srR { get; protected set; }
 
     static SwitchJoyConRHID()
     {
@@ -60,33 +49,21 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
     protected override void FinishSetup()
     {
-        Debug.Log("in finish setup");
+        base.FinishSetup();
 
-        reportId = GetChildControl<IntegerControl>("reportId");
-        subcommandAck = GetChildControl<IntegerControl>("subcommandAck");
-        subcommandReplyId = GetChildControl<IntegerControl>("subcommandReplyId");
-        firmwareVersion = GetChildControl<IntegerControl>("firmwareVersion");
-        controllerType = GetChildControl<IntegerControl>("controllerType");
-        shouldBe02 = GetChildControl<IntegerControl>("shouldBe02");
-        shouldBe01 = GetChildControl<IntegerControl>("shouldBe01");
-        useSPIColors = GetChildControl<IntegerControl>("useSPIColors");
-
-
-        // hat = GetChildControl<DpadControl>("hat");
         // plus = GetChildControl<ButtonControl>("plus");
-        // stickPress = GetChildControl<ButtonControl>("stickPress");
+        // stickPressR = GetChildControl<ButtonControl>("stickPressR");
         // home = GetChildControl<ButtonControl>("home");
-        // r = GetChildControl<ButtonControl>("r");
-        // zr = GetChildControl<ButtonControl>("zr");
+
 
         buttonSouthR = GetChildControl<ButtonControl>("buttonSouthR");
         buttonEastR = GetChildControl<ButtonControl>("buttonEastR");
         buttonWestR = GetChildControl<ButtonControl>("buttonWestR");
         buttonNorthR = GetChildControl<ButtonControl>("buttonNorthR");
-        // sl = GetChildControl<ButtonControl>("sl");
-        // sr = GetChildControl<ButtonControl>("sr");
-
-        base.FinishSetup();
+        slR = GetChildControl<ButtonControl>("slR");
+        srR = GetChildControl<ButtonControl>("srR");
+        r = GetChildControl<ButtonControl>("r");
+        zr = GetChildControl<ButtonControl>("zr");
     }
 
     public void Rumble(SwitchJoyConRumbleProfile rumbleProfile)
@@ -101,6 +78,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
     public void RequestDeviceInfo()
     {
+        Debug.Log("Requesting device info...");
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
         long returned = ExecuteCommand(ref c);
         if (returned < 0)
@@ -138,7 +116,6 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     {
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
 
-        Debug.Log(CommandToBytes(c));
 
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError($"Set report mode to {mode} failed");
@@ -172,13 +149,11 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     {
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
 
-        Debug.Log(CommandToBytes(c));
-
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError("Set LEDs failed");
     }
 
-    private string CommandToBytes(SwitchJoyConCommand command)
+    private string ThingToHexString<T>(T command)
     {
         int size = Marshal.SizeOf(command);
         byte[] arr = new byte[size];
@@ -188,7 +163,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         Marshal.Copy(ptr, arr, 0, size);
         Marshal.FreeHGlobal(ptr);
 
-        return BitConverter.ToString(arr).Replace("-", " ");
+        return BitConverter.ToString(arr).Replace("-", "");
     }
 
     /// <summary>
@@ -211,17 +186,60 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             current = null;
     }
 
-    public void OnUpdate()
-    {
-        int reportType = reportId.ReadValue();
+    public int rightStickHoriz = 0;
+    public int rightStickVert = 0;
 
-        if (reportType == 0x21)
+    public unsafe void OnUpdate()
+    {
+        // Debug.Log("OnUpdate ====");
+
+        var currentState = new SwitchJoyConRHIDInputState();
+        this.CopyState(out currentState);
+        
+        int reportType = currentState.reportId;
+
+        // Connection info
+        int batteryInfo = currentState.batteryAndConnectionInfo & 0xF0;
+        int connectionInfo = (currentState.batteryAndConnectionInfo & 0x0F);
+        int controllerTypeGlobal = (connectionInfo >> 1) & 3;
+        int powerType = connectionInfo & 1;
+
+        // // Right analog stick data
+        var rightStick0 = currentState.rightStick[0];
+        var rightStick1 = currentState.rightStick[1];
+        var rightStick2 = currentState.rightStick[2];
+
+        rightStickHoriz = rightStick0 | ((rightStick1 & 0xF) << 8);
+        rightStickVert = (rightStick1 >> 4) | (rightStick2 << 4);
+
+        if (buttonSouthR.isPressed)
         {
-            Debug.Log($"Got a subcommand response for {subcommandReplyId.ReadValue()} with acknowledgement {subcommandAck.ReadValue()}");
-            Debug.Log($"Firmware version: {firmwareVersion.ReadValue()}");
-            Debug.Log($"Controller type: {controllerType.ReadValue()}");
-            Debug.Log($"02: {shouldBe02.ReadValue()}, 01: {shouldBe01.ReadValue()}");
-            Debug.Log($"Use SPI Colors: {useSPIColors.ReadValue()}");
+            Debug.Log($"sizeInBits={stateBlock.sizeInBits}");
+            Debug.Log(ThingToHexString(currentState));
         }
+
+        // if (reportType == 0x21)
+        // {
+        //     int subcommandReplyId = currentState.subcommandReplyId;
+        //     int ack = currentState.subcommandAck;
+
+        //     Debug.Log("Subcommand received");
+        //     // Debug.Log(ThingToHexString(currentState));
+
+        //     // Debug.Log($"{rightStickHoriz}, {rightStickVert}");
+
+        //     Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
+        //     Debug.Log($"Timer is {currentState.timer}");
+        //     Debug.Log($"Subcommand response for {subcommandReplyId:X2}: {ack:X2}");
+
+        //     var subcommandWasAcknowledged = (ack & 0x80) != 0;
+        //     if (subcommandWasAcknowledged)
+        //     {
+        //         Debug.Log("Subcommand was acknoledged!");
+
+        //         int controllerType = currentState.controllerType;
+        //         Debug.Log($"Controller type: {controllerType:X2}");
+        //     }
+        // }
     }
 }

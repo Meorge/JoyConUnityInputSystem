@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
 
         amp = (Mathf.Sin(Time.time) + 1) / 2;
 
-        Debug.Log($"From Update: {SwitchJoyConRHID.current.hat.ReadValue()}");
+        // Debug.Log($"From Update: {SwitchJoyConRHID.current.hat.ReadValue()}");
         // Debug.Log(amp);
     }
 

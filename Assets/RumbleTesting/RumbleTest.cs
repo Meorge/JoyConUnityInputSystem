@@ -7,9 +7,11 @@ public class RumbleTest : MonoBehaviour
     [SerializeField] private SwitchJoyConRumbleProfile m_profile = new SwitchJoyConRumbleProfile();
     [SerializeField] private Toggle m_toggle = null;
 
+    private SwitchJoyConRHID c = null;
     // Start is called before the first frame update
     void Start()
     {
+        c = SwitchJoyConRHID.current;
         // SwitchJoyConRHID.current.RequestDeviceInfo();
         // SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Simple);
 
@@ -19,7 +21,7 @@ public class RumbleTest : MonoBehaviour
         // SwitchJoyConRHID.current.DoBluetoothPairing();
 
         // Setting LEDs
-        SwitchJoyConRHID.current.SetLEDs(
+        c.SetLEDs(
             p1: SwitchJoyConLEDStatus.On,
             p2: SwitchJoyConLEDStatus.Off,
             p3: SwitchJoyConLEDStatus.Off,
@@ -27,10 +29,10 @@ public class RumbleTest : MonoBehaviour
         );
 
         // Setting IMU to active
-        SwitchJoyConRHID.current.SetIMUEnabled(true);
+        c.SetIMUEnabled(true);
 
         // Setting input report mode to standard
-        SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Standard);
+        c.SetInputReportMode(SwitchJoyConInputMode.Standard);
 
         // Enabling vibration (seems to already be enabled)
         // SwitchJoyConRHID.current.SetVibrationEnabled(true);
@@ -39,15 +41,8 @@ public class RumbleTest : MonoBehaviour
     }
 
     void Update() {
-        if (SwitchJoyConRHID.current.buttonSouthR.wasPressedThisFrame) {
-            // SwitchJoyConRHID.current.SetLEDs(
-            //     p1: SwitchJoyConLEDStatus.On,
-            //     p2: SwitchJoyConLEDStatus.On,
-            //     p3: SwitchJoyConLEDStatus.Flashing,
-            //     p4: SwitchJoyConLEDStatus.On
-            // );
-
-            SwitchJoyConRHID.current.RequestDeviceInfo();
+        if (c.buttonSouthR.wasPressedThisFrame) {
+            c.RequestDeviceInfo();
             Debug.Log("button got pressed!");
         }
     }

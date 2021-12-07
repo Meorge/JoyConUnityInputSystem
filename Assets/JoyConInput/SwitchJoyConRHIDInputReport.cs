@@ -10,23 +10,14 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-[StructLayout(LayoutKind.Explicit, Size = 50)]
+[StructLayout(LayoutKind.Explicit, Size = 362)]
 unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
 {
     public FourCC format => new FourCC('H', 'I', 'D');
 
-    [InputControl(name = "reportId", displayName = "Report ID", layout = "Integer", format = "BYTE")]
     [FieldOffset(0)] public byte reportId;
-
-    // [InputControl(name = "timer", displayName = "Timer", layout = "Integer", format = "BYTE")]
-    [FieldOffset(1)]
-    public byte timer;
-
-    [InputControl(name = "batteryLevel", displayName = "Battery Level", layout = "Integer", format = "BIT", sizeInBits = 3, bit = 0)]
-    [InputControl(name = "batteryIsCharging", displayName = "Battery is Charging", layout = "Button", format = "BIT", bit = 3)]
-    [InputControl(name = "connectionInfo", displayName = "Connection Information", layout = "Integer", format = "BIT", sizeInBits = 4, bit = 4)]
-    [FieldOffset(2)]
-    public byte timerAndConnectionInfo;
+    [FieldOffset(1)] public byte timer;
+    [FieldOffset(2)] public byte batteryAndConnectionInfo;
 
 
     [InputControl(name = "buttonNorthR", displayName = "Y", layout = "Button", format = "BIT", bit = 0)]
@@ -42,8 +33,8 @@ unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
 
     [InputControl(name = "minus", displayName = "Minus", layout = "Button", format = "BIT", bit = 0)]
     [InputControl(name = "plus", displayName = "Plus", layout = "Button", format = "BIT", bit = 1)]
-    [InputControl(name = "rStickPress", displayName = "Right Stick Press", layout = "Button", format = "BIT", bit = 2)]
-    [InputControl(name = "lStickPress", displayName = "Left Stick Press", layout = "Button", format = "BIT", bit = 3)]
+    [InputControl(name = "stickPressR", displayName = "Right Stick Press", layout = "Button", format = "BIT", bit = 2)]
+    [InputControl(name = "stickPressL", displayName = "Left Stick Press", layout = "Button", format = "BIT", bit = 3)]
     [InputControl(name = "home", displayName = "HOME", layout = "Button", format = "BIT", bit = 4)]
     [InputControl(name = "capture", displayName = "Capture", layout = "Button", format = "BIT", bit = 5)]
     [InputControl(name = "chargingGrip", displayName = "Charging Grip", layout = "Button", format = "BIT", bit = 7)]
@@ -62,97 +53,49 @@ unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
     public byte leftButtons;
 
 
-    [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
-    [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
-    [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
-    [FieldOffset(6)] public byte leftStick1;
-    [FieldOffset(7)] public byte leftStick2;
-    [FieldOffset(8)] public byte leftStick3;
+    [FieldOffset(9)] public fixed byte rightStick[3];
+
+    // [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
+    // [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+    // [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+    // [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+    // [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+    // [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+    // [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+    // [FieldOffset(6)] public byte leftStick1;
+    // [FieldOffset(7)] public byte leftStick2;
+    // [FieldOffset(8)] public byte leftStick3;
 
 
-    [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
-    [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
-    [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-    [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-    [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
-    [FieldOffset(9)] public byte rightStick1;
-    [FieldOffset(10)] public byte rightStick2;
-    [FieldOffset(11)] public byte rightStick3;
+    // [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
+    // [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+    // [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+    // [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+    // [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+    // [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+    // [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+    // [FieldOffset(9)] public byte rightStick1;
+    // [FieldOffset(10)] public byte rightStick2;
+    // [FieldOffset(11)] public byte rightStick3;
 
 
-    [FieldOffset(12)] public byte vibratorInputReport;
+    // [FieldOffset(12)] public byte vibratorInputReport;
+
+    // [FieldOffset(13)] public byte subcommandAck;
+
+    // [FieldOffset(14)] public byte subcommandReplyId;
+
+    // [FieldOffset(15)] public ushort firmwareVersion;
+
+    // [FieldOffset(15 + 2)] public byte controllerType;
+
+    // [FieldOffset(15 + 3)] public byte shouldBe02;
+    // [FieldOffset(15 + 10)] public byte shouldBe01;
+
+    // [FieldOffset(15 + 11)] public byte useSPIColors;
 
 
-    // [InputControl(name = "field13", displayName = "Field 13 (Unknown)", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(13)]
-    // public byte field13;
-
-    // [InputControl(name = "gyroY", displayName = "Gyro Y?", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(14)]
-    // public byte gyroY;
-
-    // [InputControl(name = "field15", displayName = "Field 15 (Unknown)", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(15)]
-    // public byte field15;
-
-    // [InputControl(name = "gyroX", displayName = "Gyro X?", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(16)]
-    // public byte gyroX;
-
-    // [InputControl(name = "field17", displayName = "Field 17 (Unknown)", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(17)]
-    // public byte field17;
-
-    // [InputControl(name = "gyroX2", displayName = "Gyro X2?", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(18)]
-    // public byte gyroX_2;
-
-    // [InputControl(name = "field19", displayName = "Field 19 (Unknown)", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(19)]
-    // public byte field19;
-
-
-    // [InputControl(name = "field20", displayName = "Field 20 (Unknown)", layout = "Integer", format = "BYTE")]
-    // [FieldOffset(20)]
-    // public byte field20;
-
-    [InputControl(name = "subcommandAck", displayName = "Subcommand Acknowledgement", layout = "Integer", format = "BYTE")]
-    [FieldOffset(13)]
-    public byte subcommandAck;
-
-    [InputControl(name = "subcommandReplyId", displayName = "Subcommand Reply ID", layout = "Integer", format = "BYTE")]
-    [FieldOffset(14)]
-    public byte subcommandReplyId;
-
-    // [InputControl(name = "subcommandReply", displayName = "Subcommand Reply Data", layout = "Integer", format = "BYTE", arraySize = 35)]
-    // [FieldOffset(15)] public fixed byte subcommandReplyData[35]; // TODO: make it an array
-
-    [InputControl(name = "firmwareVersion", displayName = "Firmware Version", layout = "Integer", format = "USHT")]
-    [FieldOffset(15)]
-    public ushort firmwareVersion;
-
-    [InputControl(name = "controllerType", displayName = "Controller Type", layout = "Integer", format = "BYTE")]
-    [FieldOffset(15 + 2)]
-    public byte controllerType;
-
-    [InputControl(name = "shouldBe02", displayName = "Should be 02", layout = "Integer", format = "BYTE")]
-    [FieldOffset(15 + 3)]
-    public byte shouldBe02;
-
-
-    
-    [InputControl(name = "shouldBe01", displayName = "Should be 01", layout = "Integer", format = "BYTE")]
-    [FieldOffset(15 + 10)]
-    public byte shouldBe01;
-
-    [InputControl(name = "useSPIColors", displayName = "Use Colors from SPI?", layout = "Integer", format = "BYTE")]
-    [FieldOffset(15 + 11)]
-    public byte useSPIColors;
+    // TODO: figure out how to force the size of this struct without doing this
+    [InputControl(name = "makeItBig", displayName = "big", layout = "Button", format = "BIT", bit = 0)]
+    [FieldOffset(361)] public byte ho;
 }
-
