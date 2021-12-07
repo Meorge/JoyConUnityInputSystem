@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 
-
+[System.Serializable]
 public struct SwitchJoyConRumbleProfile
 {
     public float highBandFrequencyL;
@@ -23,6 +23,36 @@ public struct SwitchJoyConRumbleProfile
     public float highBandAmplitudeR;
     public float lowBandFrequencyR;
     public float lowBandAmplitudeR;
+
+    public static SwitchJoyConRumbleProfile CreateEmpty()
+    {
+        return new SwitchJoyConRumbleProfile {
+            highBandFrequencyL = 0,
+            highBandAmplitudeL = 0,
+            lowBandFrequencyL = 0,
+            lowBandAmplitudeL = 0,
+
+            highBandFrequencyR = 0,
+            highBandAmplitudeR = 0,
+            lowBandFrequencyR = 0,
+            lowBandAmplitudeR = 0
+        };
+    }
+
+    public static SwitchJoyConRumbleProfile CreateNeutral()
+    {
+        return new SwitchJoyConRumbleProfile {
+            highBandFrequencyL = 320,
+            highBandAmplitudeL = 0,
+            lowBandFrequencyL = 160,
+            lowBandAmplitudeL = 0,
+
+            highBandFrequencyR = 320,
+            highBandAmplitudeR = 0,
+            lowBandFrequencyR = 160,
+            lowBandAmplitudeR = 0
+        };
+    }
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 4)]
