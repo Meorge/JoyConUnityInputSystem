@@ -33,7 +33,9 @@ public class SwitchJoyConBaseSubcommand
         };
 
         IntPtr ptr = new IntPtr((void*)subcommand.arguments);
-        Marshal.Copy(GetArguments(), 0, ptr, 1);
+
+        var args = GetArguments();
+        Marshal.Copy(args, 0, ptr, args.Length);
 
         return subcommand;
     }

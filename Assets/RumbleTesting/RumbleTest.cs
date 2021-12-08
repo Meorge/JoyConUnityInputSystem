@@ -14,6 +14,9 @@ public class RumbleTest : MonoBehaviour
 
     [SerializeField] private Toggle m_toggle = null;
 
+    [SerializeField] private Image m_bodyColorImage = null;
+    [SerializeField] private Image m_buttonColorImage = null;
+
     private SwitchJoyConRHID jc = null;
 
     private Coroutine playSongCoroutine = null;
@@ -61,9 +64,17 @@ public class RumbleTest : MonoBehaviour
 
     void Update() {
         if (jc.buttonSouthR.wasPressedThisFrame) {
-            if (playSongCoroutine != null) StopCoroutine(playSongCoroutine);
-            playSongCoroutine = StartCoroutine(PlaySongCoroutine());
+            jc.ReadFactoryConfigCalib2();
         }
+
+        m_bodyColorImage.color = jc.BodyColor;
+        m_buttonColorImage.color = jc.ButtonColor;
+    }
+
+    void PlaySong()
+    {
+        if (playSongCoroutine != null) StopCoroutine(playSongCoroutine);
+        playSongCoroutine = StartCoroutine(PlaySongCoroutine());
     }
 
     IEnumerator RumbleCoroutine()

@@ -26,6 +26,9 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     public ButtonControl slR { get; protected set; }
     public ButtonControl srR { get; protected set; }
 
+    public Color BodyColor { get; protected set; } = Color.black;
+    public Color ButtonColor { get; protected set; } = Color.black;
+
     static SwitchJoyConRHID()
     {
         var matcherR = new InputDeviceMatcher()
@@ -153,6 +156,15 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             Debug.LogError("Set LEDs failed");
     }
 
+    public void ReadFactoryConfigCalib2()
+    {
+        var readSubcommand = new ReadSPIFlash(atAddress: 0x603D, withLength: 0x18);
+        Debug.Log($"read subcommand: {ThingToHexString(readSubcommand.GetSubcommand())}");
+        var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError("Read factory config and calib 2 from SPI flash failed");
+    }
+
     private string ThingToHexString<T>(T command)
     {
         int size = Marshal.SizeOf(command);
@@ -221,23 +233,110 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         if (reportType == 0x21)
         {
-            int subcommandReplyId = currentState.subcommandReplyId;
+            SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)currentState.subcommandReplyId;
             int ack = currentState.subcommandAck;
 
             Debug.Log("Subcommand received");
 
             Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
             Debug.Log($"Timer is {currentState.timer}");
-            Debug.Log($"Subcommand response for {subcommandReplyId:X2}: {ack:X2}");
+            Debug.Log($"Subcommand response for {subcommandReplyId}: {ack:X2}");
 
             var subcommandWasAcknowledged = (ack & 0x80) != 0;
             if (subcommandWasAcknowledged)
             {
                 Debug.Log("Subcommand was acknoledged!");
+                Debug.Log(ThingToHexString(currentState));
 
-                int controllerType = currentState.subcommandReplyData[2];
-                Debug.Log($"Controller type: {controllerType:X2}");
+                switch (subcommandReplyId)
+                {
+                    case SwitchJoyConSubcommandID.SPIFlashRead:
+                        HandleFlashRead(currentState.subcommandReplyData);
+                        break;
+                    default:
+                        Debug.Log($"No code for handling {subcommandReplyId}");
+                        break;
+                }
             }
+        }
+    }
+
+
+    [StructLayout(LayoutKind.Explicit, Size = 3 * 8 + 1)]
+    private struct FactoryConfigCalib2
+    {
+        // left analog stick calib
+        [FieldOffset(0)] AnalogStickCalib leftStickCalibData0;
+        [FieldOffset(3 * 1)] AnalogStickCalib leftStickCalibData1;
+        [FieldOffset(3 * 2)] AnalogStickCalib leftStickCalibData2;
+
+
+        // right analog stick calib
+        [FieldOffset(3 * 3)] AnalogStickCalib rightStickCalibData0;
+        [FieldOffset(3 * 4)] AnalogStickCalib rightStickCalibData1;
+        [FieldOffset(3 * 5)] AnalogStickCalib rightStickCalibData2;
+
+        // body rgb (24 bit)
+        [FieldOffset(19)] public Rgb24Bit bodyColor;
+
+        // buttons rgb (24 bit)
+        [FieldOffset(22)] public Rgb24Bit buttonColor;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 3)]
+    private struct AnalogStickCalib
+    {
+        [FieldOffset(0)] byte item0;
+        [FieldOffset(1)] byte item1;
+        [FieldOffset(2)] byte item2;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 3)]
+    private struct Rgb24Bit
+    {
+        [FieldOffset(0)] public byte r;
+        [FieldOffset(1)] public byte g;
+        [FieldOffset(2)] public byte b;
+
+        public Color ToUnityColor()
+        {
+            return new Color32(r, g, b, 255);
+        }
+    }
+
+    private unsafe void HandleFlashRead(byte* dataPtr)
+    {
+        byte[] data = new byte[35];
+        Marshal.Copy(new IntPtr(dataPtr), data, 0, 35);
+        uint address = BitConverter.ToUInt32(data, 0);
+        byte length = data[4];
+
+        byte[] response = new byte[30];
+        Array.Copy(data, 5, response, 0, 30);
+
+        Debug.Log($"Flash read 0x{address:X4} with length 0x{length:X2}");
+
+        // Handling factory config and calib data
+        if (address == 0x603D && length == 0x18)
+        {
+            FactoryConfigCalib2 dataStruct = new FactoryConfigCalib2();
+            // Put in a struct
+            GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
+            try
+            {
+                dataStruct = (FactoryConfigCalib2)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib2));
+            }
+            finally
+            {
+                h.Free();
+            }
+
+            Debug.Log(BitConverter.ToString(response).Replace("-", "").Replace("E6FF00", "<b>E6FF00</b>"));
+
+            Debug.Log($"Body color is #{ThingToHexString(dataStruct.bodyColor)}, button color is #{ThingToHexString(dataStruct.buttonColor)}");
+
+            BodyColor = dataStruct.bodyColor.ToUnityColor();
+            ButtonColor = dataStruct.buttonColor.ToUnityColor();
         }
     }
 }
