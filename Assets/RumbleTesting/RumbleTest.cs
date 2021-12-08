@@ -64,6 +64,7 @@ public class RumbleTest : MonoBehaviour
 
     void Update() {
         if (jc.buttonSouthR.wasPressedThisFrame) {
+            jc.ReadFactoryConfigCalib1();
             jc.ReadFactoryConfigCalib2();
         }
 
