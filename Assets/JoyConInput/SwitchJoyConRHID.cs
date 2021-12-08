@@ -198,6 +198,26 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             current = null;
     }
 
+    public enum BatteryLevelEnum
+    {
+        Full = 8,
+        Medium = 6,
+        Low = 4,
+        Critical = 2,
+        Empty = 0
+    }
+
+    public enum ControllerTypeEnum
+    {
+        JoyCon = 3,
+        ProControllerOrChargingGrip = 0 
+    }
+
+    public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
+    public bool BatteryIsCharging { get; protected set; } = false;
+    public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
+    public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
+
     public unsafe void OnUpdate()
     {
         var currentState = new SwitchJoyConRHIDInputState();
@@ -206,10 +226,12 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         int reportType = currentState.reportId;
 
         // Connection info
-        int batteryInfo = currentState.batteryAndConnectionInfo & 0xF0;
-        int connectionInfo = (currentState.batteryAndConnectionInfo & 0x0F);
-        int controllerTypeGlobal = (connectionInfo >> 1) & 3;
-        int powerType = connectionInfo & 1;
+        BatteryLevel = (BatteryLevelEnum)((currentState.batteryAndConnectionInfo & 0xE0) >> 4);
+        BatteryIsCharging = (currentState.batteryAndConnectionInfo & 0x10) >> 4 != 0;
+
+        int connectionInfo = currentState.batteryAndConnectionInfo & 0x0F;
+        ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
+        IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
 
         // Left analog stick data
         var l0 = currentState.rightStick[0];
@@ -238,15 +260,12 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
             Debug.Log("Subcommand received");
 
-            Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
+            Debug.Log($"Battery: {BatteryLevel}, controller type: {ControllerType}, is powered by Switch or USB: {IsPoweredBySwitchOrUSB}");
             Debug.Log($"Subcommand response for {subcommandReplyId}: {ack:X2}");
 
             var subcommandWasAcknowledged = (ack & 0x80) != 0;
             if (subcommandWasAcknowledged)
             {
-                Debug.Log("Subcommand was acknoledged!");
-                Debug.Log(ThingToHexString(currentState));
-
                 switch (subcommandReplyId)
                 {
                     case SwitchJoyConSubcommandID.SPIFlashRead:
