@@ -29,6 +29,8 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     public Color BodyColor { get; protected set; } = Color.black;
     public Color ButtonColor { get; protected set; } = Color.black;
 
+    private StickCalibrationData rStickCalibData = StickCalibrationData.CreateEmpty();
+
     static SwitchJoyConRHID()
     {
         var matcherR = new InputDeviceMatcher()
@@ -43,8 +45,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherR);
         InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherL);
-
-        Debug.Log($"Joy-Con (R) layout registered");
+        Debug.Log($"Joy-Con layout registered");
     }
 
     [RuntimeInitializeOnLoadMethod]
@@ -54,10 +55,9 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     {
         base.FinishSetup();
 
-        // plus = GetChildControl<ButtonControl>("plus");
-        // stickPressR = GetChildControl<ButtonControl>("stickPressR");
-        // home = GetChildControl<ButtonControl>("home");
-
+        plus = GetChildControl<ButtonControl>("plus");
+        stickPressR = GetChildControl<ButtonControl>("stickPressR");
+        home = GetChildControl<ButtonControl>("home");
 
         buttonSouthR = GetChildControl<ButtonControl>("buttonSouthR");
         buttonEastR = GetChildControl<ButtonControl>("buttonEastR");
@@ -198,12 +198,6 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             current = null;
     }
 
-    public int rightStickHoriz { get; protected set; } = 0;
-    public int rightStickVert { get; protected set; } = 0;
-
-    public int leftStickHoriz { get; protected set; } = 0;
-    public int leftStickVert { get; protected set; } = 0;
-
     public unsafe void OnUpdate()
     {
         var currentState = new SwitchJoyConRHIDInputState();
@@ -221,15 +215,21 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         var l0 = currentState.rightStick[0];
         var l1 = currentState.rightStick[1];
         var l2 = currentState.rightStick[2];
-        leftStickHoriz = l0 | ((l1 & 0xF) << 8);
-        leftStickVert = (l1 >> 4) | (l2 << 4);
+        var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
+        var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
 
         // Right analog stick data
         var r0 = currentState.rightStick[0];
         var r1 = currentState.rightStick[1];
         var r2 = currentState.rightStick[2];
-        rightStickHoriz = r0 | ((r1 & 0xF) << 8);
-        rightStickVert = (r1 >> 4) | (r2 << 4);
+        var rawRightStickHoriz = r0 | ((r1 & 0xF) << 8);
+        var rawRightStickVert = (r1 >> 4) | (r2 << 4);
+
+        var trueRightStickHoriz = (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1;
+        var trueRightStickVert = (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1;
+        var rightStickVector = new Vector2(trueRightStickHoriz, trueRightStickVert);
+
+        // Debug.Log($"{rightStickVector}");
 
         if (reportType == 0x21)
         {
@@ -239,7 +239,6 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             Debug.Log("Subcommand received");
 
             Debug.Log($"Battery: {batteryInfo:X2}, controller type: {controllerTypeGlobal:X2}, power type: {powerType:X2}");
-            Debug.Log($"Timer is {currentState.timer}");
             Debug.Log($"Subcommand response for {subcommandReplyId}: {ack:X2}");
 
             var subcommandWasAcknowledged = (ack & 0x80) != 0;
@@ -266,14 +265,10 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     private unsafe struct FactoryConfigCalib2
     {
         // left analog stick calib
-        [FieldOffset(0)] public fixed byte lStick0[3];
-        [FieldOffset(3)] public fixed byte lStick1[3];
-        [FieldOffset(6)] public fixed byte lStick2[3];
+        [FieldOffset(0)] public fixed byte lStick[9];
 
         // right analog stick calib
-        [FieldOffset(9)] public fixed byte rStick0[3];
-        [FieldOffset(12)] public fixed byte rStick1[3];
-        [FieldOffset(15)] public fixed byte rStick2[3];
+        [FieldOffset(9)] public fixed byte rStick[9];
 
         // body rgb (24 bit)
         [FieldOffset(19)] public Rgb24Bit bodyColor;
@@ -309,25 +304,80 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         // Handling factory config and calib data
         if (address == 0x603D && length == 0x18)
+            HandleFlashRead_FactoryConfigCalibData2(response);
+    }
+
+    private unsafe void HandleFlashRead_FactoryConfigCalibData2(byte[] response)
+    {
+        FactoryConfigCalib2 dataStruct = new FactoryConfigCalib2();
+        // Put in a struct
+        GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
+        try
         {
-            FactoryConfigCalib2 dataStruct = new FactoryConfigCalib2();
-            // Put in a struct
-            GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
-            try
-            {
-                dataStruct = (FactoryConfigCalib2)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib2));
-            }
-            finally
-            {
-                h.Free();
-            }
+            dataStruct = (FactoryConfigCalib2)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib2));
+        }
+        finally
+        {
+            h.Free();
+        }
 
-            Debug.Log(BitConverter.ToString(response).Replace("-", "").Replace("E6FF00", "<b>E6FF00</b>"));
+        DecodeRightStickData(dataStruct.rStick);
 
-            Debug.Log($"Body color is #{ThingToHexString(dataStruct.bodyColor)}, button color is #{ThingToHexString(dataStruct.buttonColor)}");
+        BodyColor = dataStruct.bodyColor.ToUnityColor();
+        ButtonColor = dataStruct.buttonColor.ToUnityColor();
+    }
 
-            BodyColor = dataStruct.bodyColor.ToUnityColor();
-            ButtonColor = dataStruct.buttonColor.ToUnityColor();
+    private unsafe ushort[] DecodeStickData(byte* stickCal)
+    {
+        // yoinked from
+        // https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/spi_flash_notes.md#analog-stick-factory-and-user-calibration
+        ushort[] data = new ushort[6];
+        data[0] = (ushort)((stickCal[1] << 8) & 0xF00 | stickCal[0]);
+        data[1] = (ushort)((stickCal[2] << 4) | (stickCal[1] >> 4));
+        data[2] = (ushort)((stickCal[4] << 8) & 0xF00 | stickCal[3]);
+        data[3] = (ushort)((stickCal[5] << 4) | (stickCal[4] >> 4));
+        data[4] = (ushort)((stickCal[7] << 8) & 0xF00 | stickCal[6]);
+        data[5] = (ushort)((stickCal[8] << 4) | (stickCal[7] >> 4));
+        return data;
+    }
+
+    private unsafe void DecodeRightStickData(byte* rStickCal)
+    {
+        ushort[] decoded = DecodeStickData(rStickCal);
+
+        var xAxisCenter = decoded[0];
+        var yAxisCenter = decoded[1];
+        var xAxisMinBelowCenter = decoded[2];
+        var yAxisMinBelowCenter = decoded[3];
+        var xAxisMaxAboveCenter = decoded[4];
+        var yAxisMaxAboveCenter = decoded[5];
+
+        var rStickXMin = xAxisCenter - xAxisMinBelowCenter;
+        var rStickXMax = xAxisCenter + xAxisMaxAboveCenter;
+
+        var rStickYMin = yAxisCenter - yAxisMinBelowCenter;
+        var rStickYMax = yAxisCenter + yAxisMaxAboveCenter;
+
+        rStickCalibData = new StickCalibrationData()
+        {
+            xMin = rStickXMin,
+            xMax = rStickXMax,
+            yMin = rStickYMin,
+            yMax = rStickYMax
+        };
+    }
+
+    private struct StickCalibrationData
+    {
+        public int xMin;
+        public int xMax;
+
+        public int yMin;
+        public int yMax;
+
+        public static StickCalibrationData CreateEmpty()
+        {
+            return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0 };
         }
     }
 }
