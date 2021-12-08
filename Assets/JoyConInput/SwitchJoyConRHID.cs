@@ -263,32 +263,23 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
 
     [StructLayout(LayoutKind.Explicit, Size = 3 * 8 + 1)]
-    private struct FactoryConfigCalib2
+    private unsafe struct FactoryConfigCalib2
     {
         // left analog stick calib
-        [FieldOffset(0)] AnalogStickCalib leftStickCalibData0;
-        [FieldOffset(3 * 1)] AnalogStickCalib leftStickCalibData1;
-        [FieldOffset(3 * 2)] AnalogStickCalib leftStickCalibData2;
-
+        [FieldOffset(0)] public fixed byte lStick0[3];
+        [FieldOffset(3)] public fixed byte lStick1[3];
+        [FieldOffset(6)] public fixed byte lStick2[3];
 
         // right analog stick calib
-        [FieldOffset(3 * 3)] AnalogStickCalib rightStickCalibData0;
-        [FieldOffset(3 * 4)] AnalogStickCalib rightStickCalibData1;
-        [FieldOffset(3 * 5)] AnalogStickCalib rightStickCalibData2;
+        [FieldOffset(9)] public fixed byte rStick0[3];
+        [FieldOffset(12)] public fixed byte rStick1[3];
+        [FieldOffset(15)] public fixed byte rStick2[3];
 
         // body rgb (24 bit)
         [FieldOffset(19)] public Rgb24Bit bodyColor;
 
         // buttons rgb (24 bit)
         [FieldOffset(22)] public Rgb24Bit buttonColor;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 3)]
-    private struct AnalogStickCalib
-    {
-        [FieldOffset(0)] byte item0;
-        [FieldOffset(1)] byte item1;
-        [FieldOffset(2)] byte item2;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 3)]
