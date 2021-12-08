@@ -74,6 +74,7 @@ unsafe struct SwitchJoyConRHIDInputState : IInputStateTypeInfo
     // For 0x31 (NFC/IR?)
     [FieldOffset(49)] public fixed byte nfcIRDataInputReport[313];
 
+    // TODO: I need to get stick controls in here, but trying to add another field causes Unity to crash...
 
     // TODO: figure out how to force the size of this struct without doing this
     [InputControl(name = "makeItBig", displayName = "big", layout = "Button", format = "BIT", bit = 0)]

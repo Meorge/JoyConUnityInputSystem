@@ -31,6 +31,16 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
     private StickCalibrationData rStickCalibData = StickCalibrationData.CreateEmpty();
 
+    public Vector2 RightStick { get; protected set; } = new Vector2();
+
+
+    public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
+    public bool BatteryIsCharging { get; protected set; } = false;
+    public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
+    public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
+
+    private bool m_configDataLoaded = false;
+
     static SwitchJoyConRHID()
     {
         var matcherR = new InputDeviceMatcher()
@@ -159,7 +169,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     public void ReadFactoryConfigCalib2()
     {
         var readSubcommand = new ReadSPIFlash(atAddress: 0x603D, withLength: 0x18);
-        Debug.Log($"read subcommand: {ThingToHexString(readSubcommand.GetSubcommand())}");
+        Debug.Log($"Requesting factory config and calibration data...");
         var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError("Read factory config and calib 2 from SPI flash failed");
@@ -213,11 +223,6 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         ProControllerOrChargingGrip = 0 
     }
 
-    public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
-    public bool BatteryIsCharging { get; protected set; } = false;
-    public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
-    public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
-
     public unsafe void OnUpdate()
     {
         var currentState = new SwitchJoyConRHIDInputState();
@@ -249,9 +254,8 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         var trueRightStickHoriz = (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1;
         var trueRightStickVert = (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1;
-        var rightStickVector = new Vector2(trueRightStickHoriz, trueRightStickVert);
-
-        // Debug.Log($"{rightStickVector}");
+        
+        RightStick = new Vector2(trueRightStickHoriz, trueRightStickVert);
 
         if (reportType == 0x21)
         {
@@ -277,6 +281,10 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
                 }
             }
         }
+
+
+        // If we haven't gotten config data yet, let's ask for it
+        if (!m_configDataLoaded) ReadFactoryConfigCalib2();
     }
 
 
@@ -344,6 +352,8 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         BodyColor = dataStruct.bodyColor.ToUnityColor();
         ButtonColor = dataStruct.buttonColor.ToUnityColor();
+
+        m_configDataLoaded = true;
     }
 
     private unsafe ushort[] DecodeStickData(byte* stickCal)
