@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
@@ -32,35 +33,36 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(0)] public byte leftStickX;
         [FieldOffset(1)] public byte leftStickY;
 
-        [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
-        [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
-        [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
-        [FieldOffset(2)] public byte rightStickX;
-        [FieldOffset(3)] public byte rightStickY;
+        [InputControl(name = "rightStick", layout = "Stick", format = "VEC2")]
+        // [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        // [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        // [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
+        // [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        // [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
+        // [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
+        [FieldOffset(2)] public float rightStickX;
+        [FieldOffset(6)] public float rightStickY;
 
-        [InputControl(name = "dpad", format = "BIT", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/up", bit = (int)Button.Up)]
-        [InputControl(name = "dpad/right", bit = (int)Button.Right)]
-        [InputControl(name = "dpad/down", bit = (int)Button.Down)]
-        [InputControl(name = "dpad/left", bit = (int)Button.Left)]
-        [InputControl(name = "buttonWest", displayName = "Y", shortDisplayName = "Y", bit = (int)Button.Y, usage = "SecondaryAction")]
-        [InputControl(name = "buttonNorth", displayName = "X", shortDisplayName = "X", bit = (int)Button.X)]
-        [InputControl(name = "buttonSouth", displayName = "B", shortDisplayName = "B", bit = (int)Button.B, usage = "Back")]
-        [InputControl(name = "buttonEast", displayName = "A", shortDisplayName = "A", bit = (int)Button.A, usage = "PrimaryAction")]
-        [InputControl(name = "leftShoulder", displayName = "L", shortDisplayName = "L", bit = (uint)Button.L)]
-        [InputControl(name = "rightShoulder", displayName = "R", shortDisplayName = "R", bit = (uint)Button.R)]
-        [InputControl(name = "leftStickPress", displayName = "Left Stick", bit = (uint)Button.StickL)]
-        [InputControl(name = "rightStickPress", displayName = "Right Stick", bit = (uint)Button.StickR)]
-        [InputControl(name = "leftTrigger", displayName = "ZL", shortDisplayName = "ZL", format = "BIT", bit = (uint)Button.ZL)]
-        [InputControl(name = "rightTrigger", displayName = "ZR", shortDisplayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
-        [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
-        [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
-        [FieldOffset(4)] public ushort buttons;
+        [InputControl(name = "dpad", layout = "Dpad", format = "BIT", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/up", layout = "Button", bit = (int)Button.Up)]
+        [InputControl(name = "dpad/right", layout = "Button", bit = (int)Button.Right)]
+        [InputControl(name = "dpad/down", layout = "Button", bit = (int)Button.Down)]
+        [InputControl(name = "dpad/left", layout = "Button", bit = (int)Button.Left)]
+        [InputControl(name = "buttonWest", displayName = "Y", shortDisplayName = "Y", layout = "Button", bit = (int)Button.Y, usage = "SecondaryAction")]
+        [InputControl(name = "buttonNorth", displayName = "X", shortDisplayName = "X", layout = "Button", bit = (int)Button.X)]
+        [InputControl(name = "buttonSouth", displayName = "B", shortDisplayName = "B", layout = "Button", bit = (int)Button.B, usage = "Back")]
+        [InputControl(name = "buttonEast", displayName = "A", shortDisplayName = "A", layout = "Button", bit = (int)Button.A, usage = "PrimaryAction")]
+        [InputControl(name = "leftShoulder", displayName = "L", shortDisplayName = "L", layout = "Button", bit = (uint)Button.L)]
+        [InputControl(name = "rightShoulder", displayName = "R", shortDisplayName = "R", layout = "Button", bit = (uint)Button.R)]
+        [InputControl(name = "leftStickPress", displayName = "Left Stick", layout = "Button", bit = (uint)Button.StickL)]
+        [InputControl(name = "rightStickPress", displayName = "Right Stick", layout = "Button", bit = (uint)Button.StickR)]
+        [InputControl(name = "leftTrigger", displayName = "ZL", shortDisplayName = "ZL", format = "BIT", layout = "Button", bit = (uint)Button.ZL)]
+        [InputControl(name = "rightTrigger", displayName = "ZR", shortDisplayName = "ZR", format = "BIT", layout = "Button", bit = (uint)Button.ZR)]
+        [InputControl(name = "start", displayName = "Plus", layout = "Button", bit = (uint)Button.Plus, usage = "Menu")]
+        [InputControl(name = "select", displayName = "Minus", layout = "Button", bit = (uint)Button.Minus)]
+        [FieldOffset(10)] public ushort buttons;
 
+ 
         public enum Button
         {
             Up = 0,
@@ -87,6 +89,17 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             B = South,
             Y = West,
             A = East,
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Set(Button button, bool state)
+        {
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            var bit = (ushort)(1U << (int)button);
+            if (state)
+                buttons = (ushort)(buttons | bit);
+            else
+                buttons &= (ushort)~bit;
         }
     }
     #endif

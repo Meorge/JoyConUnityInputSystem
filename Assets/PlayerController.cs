@@ -30,20 +30,20 @@ public class PlayerController : MonoBehaviour
         // Debug.Log(amp);
     }
 
-    IEnumerator RumbleCoroutine()
-    {
-        while (true)
-        {
-            SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
-            {
-                highBandFrequencyR = 100,
-                highBandAmplitudeR = 0,
-                lowBandFrequencyR = 210,
-                lowBandAmplitudeR = amp
-            });
-            yield return new WaitForSeconds(0.05f);
-        }
-    }
+    // IEnumerator RumbleCoroutine()
+    // {
+    //     while (true)
+    //     {
+    //         SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+    //         {
+    //             highBandFrequencyR = 100,
+    //             highBandAmplitudeR = 0,
+    //             lowBandFrequencyR = 210,
+    //             lowBandAmplitudeR = amp
+    //         });
+    //         yield return new WaitForSeconds(0.05f);
+    //     }
+    // }
 
     void OnMove(InputValue value)
     {
