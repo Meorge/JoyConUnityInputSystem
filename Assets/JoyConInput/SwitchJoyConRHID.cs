@@ -13,19 +13,8 @@ using System.Runtime.InteropServices;
 #endif
 public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 {
-    
-    public IntegerControl reportId;
-    public IntegerControl subcommandAck;
-    public IntegerControl subcommandReplyId;
-    public IntegerControl firmwareVersion;
-    public IntegerControl controllerType;
-    public IntegerControl shouldBe02;
-    public IntegerControl shouldBe01;
-    public IntegerControl useSPIColors;
-
-    public DpadControl hat { get; protected set; }
     public ButtonControl plus { get; protected set; }
-    public ButtonControl stickPress { get; protected set; }
+    public ButtonControl stickPressR { get; protected set; }
     public ButtonControl home { get; protected set; }
     public ButtonControl r { get; protected set; }
     public ButtonControl zr { get; protected set; }
@@ -34,8 +23,24 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     public ButtonControl buttonEastR { get; protected set; }
     public ButtonControl buttonWestR { get; protected set; }
     public ButtonControl buttonNorthR { get; protected set; }
-    public ButtonControl sl { get; protected set; }
-    public ButtonControl sr { get; protected set; }
+    public ButtonControl slR { get; protected set; }
+    public ButtonControl srR { get; protected set; }
+
+    public Color BodyColor { get; protected set; } = Color.black;
+    public Color ButtonColor { get; protected set; } = Color.black;
+
+    private StickCalibrationData rStickCalibData = StickCalibrationData.CreateEmpty();
+
+    public Vector2 RightStick { get; protected set; } = new Vector2();
+
+
+    public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
+    public bool BatteryIsCharging { get; protected set; } = false;
+    public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
+    public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
+
+    private bool m_config1DataLoaded = false;
+    private bool m_config2DataLoaded = false;
 
     static SwitchJoyConRHID()
     {
@@ -51,8 +56,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
         InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherR);
         InputSystem.RegisterLayout<SwitchJoyConRHID>(matches: matcherL);
-
-        Debug.Log($"Joy-Con (R) layout registered");
+        Debug.Log($"Joy-Con layout registered");
     }
 
     [RuntimeInitializeOnLoadMethod]
@@ -60,33 +64,20 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
     protected override void FinishSetup()
     {
-        Debug.Log("in finish setup");
+        base.FinishSetup();
 
-        reportId = GetChildControl<IntegerControl>("reportId");
-        subcommandAck = GetChildControl<IntegerControl>("subcommandAck");
-        subcommandReplyId = GetChildControl<IntegerControl>("subcommandReplyId");
-        firmwareVersion = GetChildControl<IntegerControl>("firmwareVersion");
-        controllerType = GetChildControl<IntegerControl>("controllerType");
-        shouldBe02 = GetChildControl<IntegerControl>("shouldBe02");
-        shouldBe01 = GetChildControl<IntegerControl>("shouldBe01");
-        useSPIColors = GetChildControl<IntegerControl>("useSPIColors");
-
-
-        // hat = GetChildControl<DpadControl>("hat");
-        // plus = GetChildControl<ButtonControl>("plus");
-        // stickPress = GetChildControl<ButtonControl>("stickPress");
-        // home = GetChildControl<ButtonControl>("home");
-        // r = GetChildControl<ButtonControl>("r");
-        // zr = GetChildControl<ButtonControl>("zr");
+        plus = GetChildControl<ButtonControl>("plus");
+        stickPressR = GetChildControl<ButtonControl>("stickPressR");
+        home = GetChildControl<ButtonControl>("home");
 
         buttonSouthR = GetChildControl<ButtonControl>("buttonSouthR");
         buttonEastR = GetChildControl<ButtonControl>("buttonEastR");
         buttonWestR = GetChildControl<ButtonControl>("buttonWestR");
         buttonNorthR = GetChildControl<ButtonControl>("buttonNorthR");
-        // sl = GetChildControl<ButtonControl>("sl");
-        // sr = GetChildControl<ButtonControl>("sr");
-
-        base.FinishSetup();
+        slR = GetChildControl<ButtonControl>("slR");
+        srR = GetChildControl<ButtonControl>("srR");
+        r = GetChildControl<ButtonControl>("r");
+        zr = GetChildControl<ButtonControl>("zr");
     }
 
     public void Rumble(SwitchJoyConRumbleProfile rumbleProfile)
@@ -101,6 +92,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
 
     public void RequestDeviceInfo()
     {
+        Debug.Log("Requesting device info...");
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
         long returned = ExecuteCommand(ref c);
         if (returned < 0)
@@ -138,7 +130,6 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     {
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
 
-        Debug.Log(CommandToBytes(c));
 
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError($"Set report mode to {mode} failed");
@@ -172,13 +163,29 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
     {
         var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
 
-        Debug.Log(CommandToBytes(c));
-
         if (ExecuteCommand(ref c) < 0)
             Debug.LogError("Set LEDs failed");
     }
 
-    private string CommandToBytes(SwitchJoyConCommand command)
+    public void ReadFactoryConfigCalib1()
+    {
+        var readSubcommand = new ReadSPIFlash(atAddress: 0x6020, withLength: 0x17);
+        Debug.Log($"Requesting factory config and calibration data for IMU...");
+        var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError("Read factory config and calib 1 from SPI flash failed");
+    }
+
+    public void ReadFactoryConfigCalib2()
+    {
+        var readSubcommand = new ReadSPIFlash(atAddress: 0x603D, withLength: 0x18);
+        Debug.Log($"Requesting factory config and calibration for sticks data...");
+        var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+        if (ExecuteCommand(ref c) < 0)
+            Debug.LogError("Read factory config and calib 2 from SPI flash failed");
+    }
+
+    private string ThingToHexString<T>(T command)
     {
         int size = Marshal.SizeOf(command);
         byte[] arr = new byte[size];
@@ -188,7 +195,7 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
         Marshal.Copy(ptr, arr, 0, size);
         Marshal.FreeHGlobal(ptr);
 
-        return BitConverter.ToString(arr).Replace("-", " ");
+        return BitConverter.ToString(arr).Replace("-", "");
     }
 
     /// <summary>
@@ -211,17 +218,237 @@ public class SwitchJoyConRHID : InputDevice, IInputUpdateCallbackReceiver
             current = null;
     }
 
-    public void OnUpdate()
+    public enum BatteryLevelEnum
     {
-        int reportType = reportId.ReadValue();
+        Full = 8,
+        Medium = 6,
+        Low = 4,
+        Critical = 2,
+        Empty = 0
+    }
+
+    public enum ControllerTypeEnum
+    {
+        JoyCon = 3,
+        ProControllerOrChargingGrip = 0 
+    }
+
+    public unsafe void OnUpdate()
+    {
+        var currentState = new SwitchJoyConRHIDInputState();
+        this.CopyState(out currentState);
+        
+        int reportType = currentState.reportId;
+
+        // Connection info
+        BatteryLevel = (BatteryLevelEnum)((currentState.batteryAndConnectionInfo & 0xE0) >> 4);
+        BatteryIsCharging = (currentState.batteryAndConnectionInfo & 0x10) >> 4 != 0;
+
+        int connectionInfo = currentState.batteryAndConnectionInfo & 0x0F;
+        ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
+        IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
+
+        // Left analog stick data
+        var l0 = currentState.rightStick[0];
+        var l1 = currentState.rightStick[1];
+        var l2 = currentState.rightStick[2];
+        var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
+        var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
+
+        // Right analog stick data
+        var r0 = currentState.rightStick[0];
+        var r1 = currentState.rightStick[1];
+        var r2 = currentState.rightStick[2];
+        var rawRightStickHoriz = r0 | ((r1 & 0xF) << 8);
+        var rawRightStickVert = (r1 >> 4) | (r2 << 4);
+        
+        RightStick = new Vector2(
+            (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1,
+            (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1
+        );
 
         if (reportType == 0x21)
         {
-            Debug.Log($"Got a subcommand response for {subcommandReplyId.ReadValue()} with acknowledgement {subcommandAck.ReadValue()}");
-            Debug.Log($"Firmware version: {firmwareVersion.ReadValue()}");
-            Debug.Log($"Controller type: {controllerType.ReadValue()}");
-            Debug.Log($"02: {shouldBe02.ReadValue()}, 01: {shouldBe01.ReadValue()}");
-            Debug.Log($"Use SPI Colors: {useSPIColors.ReadValue()}");
+            SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)currentState.subcommandReplyId;
+            int ack = currentState.subcommandAck;
+            var subcommandWasAcknowledged = (ack & 0x80) != 0;
+
+            Debug.Log("Subcommand received");
+            Debug.Log($"Battery: {BatteryLevel}, controller type: {ControllerType}, is powered by Switch or USB: {IsPoweredBySwitchOrUSB}");
+            Debug.Log($"Subcommand response for {subcommandReplyId}: {ack:X2}");
+
+            if (subcommandWasAcknowledged)
+            {
+                switch (subcommandReplyId)
+                {
+                    case SwitchJoyConSubcommandID.SPIFlashRead:
+                        HandleFlashRead(currentState.subcommandReplyData);
+                        break;
+                    default:
+                        Debug.Log($"No code for handling {subcommandReplyId}");
+                        break;
+                }
+            }
+        }
+
+
+        // If we haven't gotten config data yet, let's ask for it
+        // if (!m_config1DataLoaded) ReadFactoryConfigCalib1();
+        // if (!m_config2DataLoaded) ReadFactoryConfigCalib2();
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
+    private unsafe struct FactoryConfigCalib1
+    {
+        [FieldOffset(0)] public fixed ushort accOriginPos[3];
+        [FieldOffset(3)] public fixed ushort accSensitivity[3];
+        [FieldOffset(6)] public fixed ushort gyroOrigin[3];
+        [FieldOffset(9)] public fixed ushort gyroSensitivity[3];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 3 * 8 + 1)]
+    private unsafe struct FactoryConfigCalib2
+    {
+        // left analog stick calib
+        [FieldOffset(0)] public fixed byte lStick[9];
+
+        // right analog stick calib
+        [FieldOffset(9)] public fixed byte rStick[9];
+
+        // body rgb (24 bit)
+        [FieldOffset(19)] public Rgb24Bit bodyColor;
+
+        // buttons rgb (24 bit)
+        [FieldOffset(22)] public Rgb24Bit buttonColor;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 3)]
+    private struct Rgb24Bit
+    {
+        [FieldOffset(0)] public byte r;
+        [FieldOffset(1)] public byte g;
+        [FieldOffset(2)] public byte b;
+
+        public Color ToUnityColor()
+        {
+            return new Color32(r, g, b, 255);
+        }
+    }
+
+    private unsafe void HandleFlashRead(byte* dataPtr)
+    {
+        byte[] data = new byte[35];
+        Marshal.Copy(new IntPtr(dataPtr), data, 0, 35);
+        uint address = BitConverter.ToUInt32(data, 0);
+        byte length = data[4];
+
+        byte[] response = new byte[30];
+        Array.Copy(data, 5, response, 0, 30);
+
+        Debug.Log($"Flash read 0x{address:X4} with length 0x{length:X2}");
+
+        // Handling factory config and calib data
+        if (address == 0x603D && length == 0x18)
+            HandleFlashRead_FactoryConfigCalibData2(response);
+
+        else if (address == 0x6020 && length == 0x17)
+            HandleFlashRead_FactoryConfigCalibData1(response);
+    }
+
+    private unsafe void HandleFlashRead_FactoryConfigCalibData1(byte[] response)
+    {
+        FactoryConfigCalib1 dataStruct = new FactoryConfigCalib1();
+        // Put in a struct
+        GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
+        try
+        {
+            dataStruct = (FactoryConfigCalib1)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib1));
+        }
+        finally
+        {
+            h.Free();
+        }
+
+        // TODO: start parsing this data!!
+
+        Debug.Log(ThingToHexString(dataStruct));
+
+        m_config1DataLoaded = true;
+    }
+
+    private unsafe void HandleFlashRead_FactoryConfigCalibData2(byte[] response)
+    {
+        FactoryConfigCalib2 dataStruct = new FactoryConfigCalib2();
+        // Put in a struct
+        GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
+        try
+        {
+            dataStruct = (FactoryConfigCalib2)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib2));
+        }
+        finally
+        {
+            h.Free();
+        }
+
+        DecodeRightStickData(dataStruct.rStick);
+
+        BodyColor = dataStruct.bodyColor.ToUnityColor();
+        ButtonColor = dataStruct.buttonColor.ToUnityColor();
+
+        m_config2DataLoaded = true;
+    }
+
+    private unsafe ushort[] DecodeStickData(byte* stickCal)
+    {
+        // yoinked from
+        // https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/spi_flash_notes.md#analog-stick-factory-and-user-calibration
+        ushort[] data = new ushort[6];
+        data[0] = (ushort)((stickCal[1] << 8) & 0xF00 | stickCal[0]);
+        data[1] = (ushort)((stickCal[2] << 4) | (stickCal[1] >> 4));
+        data[2] = (ushort)((stickCal[4] << 8) & 0xF00 | stickCal[3]);
+        data[3] = (ushort)((stickCal[5] << 4) | (stickCal[4] >> 4));
+        data[4] = (ushort)((stickCal[7] << 8) & 0xF00 | stickCal[6]);
+        data[5] = (ushort)((stickCal[8] << 4) | (stickCal[7] >> 4));
+        return data;
+    }
+
+    private unsafe void DecodeRightStickData(byte* rStickCal)
+    {
+        ushort[] decoded = DecodeStickData(rStickCal);
+
+        var xAxisCenter = decoded[0];
+        var yAxisCenter = decoded[1];
+        var xAxisMinBelowCenter = decoded[2];
+        var yAxisMinBelowCenter = decoded[3];
+        var xAxisMaxAboveCenter = decoded[4];
+        var yAxisMaxAboveCenter = decoded[5];
+
+        var rStickXMin = xAxisCenter - xAxisMinBelowCenter;
+        var rStickXMax = xAxisCenter + xAxisMaxAboveCenter;
+
+        var rStickYMin = yAxisCenter - yAxisMinBelowCenter;
+        var rStickYMax = yAxisCenter + yAxisMaxAboveCenter;
+
+        rStickCalibData = new StickCalibrationData()
+        {
+            xMin = rStickXMin,
+            xMax = rStickXMax,
+            yMin = rStickYMin,
+            yMax = rStickYMax
+        };
+    }
+
+    private struct StickCalibrationData
+    {
+        public int xMin;
+        public int xMax;
+
+        public int yMin;
+        public int yMax;
+
+        public static StickCalibrationData CreateEmpty()
+        {
+            return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0 };
         }
     }
 }
