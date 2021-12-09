@@ -11,32 +11,20 @@ using System.Runtime.InteropServices;
 
 namespace UnityEngine.InputSystem.Switch
 {
-    [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState), displayName = "Joy-Con (R)")]
+    [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState), displayName = "Joy-Con")]
     #if UNITY_EDITOR
     [InitializeOnLoad]
     #endif
     public class SwitchControllerHID : InputDevice, IInputUpdateCallbackReceiver, IEventPreProcessor
     {
-        public ButtonControl plus { get; protected set; }
-        public ButtonControl stickPressR { get; protected set; }
-        public ButtonControl home { get; protected set; }
-        public ButtonControl r { get; protected set; }
-        public ButtonControl zr { get; protected set; }
-
-        public ButtonControl buttonSouthR { get; protected set; }
-        public ButtonControl buttonEastR { get; protected set; }
-        public ButtonControl buttonWestR { get; protected set; }
-        public ButtonControl buttonNorthR { get; protected set; }
-        public ButtonControl slR { get; protected set; }
-        public ButtonControl srR { get; protected set; }
-
+        private bool m_colorsLoaded = false;
         public Color BodyColor { get; protected set; } = Color.black;
         public Color ButtonColor { get; protected set; } = Color.black;
+        public Color LeftGripColor { get; protected set; } = Color.black;
+        public Color RightGripColor { get; protected set; } = Color.black;
 
+        private StickCalibrationData lStickCalibData = StickCalibrationData.CreateEmpty();
         private StickCalibrationData rStickCalibData = StickCalibrationData.CreateEmpty();
-
-        public Vector2 RightStick { get; protected set; } = new Vector2();
-
 
         public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
         public bool BatteryIsCharging { get; protected set; } = false;
@@ -76,9 +64,7 @@ namespace UnityEngine.InputSystem.Switch
         {
             base.OnAdded();
             SetInputReportMode(SwitchJoyConInputMode.Standard);
-            // ReadFactoryConfigCalib1();
-            ReadFactoryConfigCalib2();
-            // Do handshake/config stuff here
+            ReadColors();
         }
 
 
@@ -174,22 +160,13 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.LogError("Set LEDs failed");
         }
 
-        public void ReadFactoryConfigCalib1()
+        public void ReadColors()
         {
-            var readSubcommand = new ReadSPIFlash(atAddress: 0x6020, withLength: 0x17);
-            Debug.Log($"Requesting factory config and calibration data for IMU...");
+            var readSubcommand = new ReadSPIFlash(atAddress: 0x6050, withLength: 0x2F);
+            Debug.Log($"Requesting color info...");
             var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
-                Debug.LogError("Read factory config and calib 1 from SPI flash failed");
-        }
-
-        public void ReadFactoryConfigCalib2()
-        {
-            var readSubcommand = new ReadSPIFlash(atAddress: 0x603D, withLength: 0x18);
-            Debug.Log($"Requesting factory config and calibration for sticks data...");
-            var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
-            if (ExecuteCommand(ref c) < 0)
-                Debug.LogError("Read factory config and calib 2 from SPI flash failed");
+                Debug.LogError("Read color info failed");
         }
 
         private string ThingToHexString<T>(T command)
@@ -288,7 +265,6 @@ namespace UnityEngine.InputSystem.Switch
             // Simple report mode!
             if (genericReport->reportId == 0x3f)
             {
-                Debug.Log("Simple report detected, skip it");
                 SetInputReportMode(SwitchJoyConInputMode.Standard);
                 return false;
             }
@@ -298,12 +274,13 @@ namespace UnityEngine.InputSystem.Switch
             {
                 var data = ((SwitchControllerSubcommandResponseInputReport*)stateEvent->state);
                 HandleSubcommand(*data);
+                return true;
             }
 
             // Full report mode!
             if (genericReport->reportId == 0x30)
             {
-                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref rStickCalibData);
+                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref lStickCalibData, ref rStickCalibData);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
                 return true;
@@ -321,13 +298,10 @@ namespace UnityEngine.InputSystem.Switch
             ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
             IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
 
-
             SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)response.subcommandId;
             var subcommandWasAcknowledged = (response.ack & 0x80) != 0;
 
-            // Debug.Log("Subcommand received");
-            // Debug.Log($"Battery: {BatteryLevel}, controller type: {ControllerType}, is powered by Switch or USB: {IsPoweredBySwitchOrUSB}");
-            Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
+            // Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
 
             if (subcommandWasAcknowledged)
             {
@@ -337,7 +311,6 @@ namespace UnityEngine.InputSystem.Switch
                         HandleFlashRead(response.replyData);
                         break;
                     default:
-                        // Debug.Log($"No code for handling {subcommandReplyId}");
                         break;
                 }
             }
@@ -345,81 +318,8 @@ namespace UnityEngine.InputSystem.Switch
 
         public void OnUpdate()
         {
-            // m_configDataTimer -= (int)(Time.deltaTime * 1000);
-            // if (m_configDataTimer < 0)
-            // {
-            //     m_configDataTimer += (int)(configTimerDataDefault + Time.deltaTime);
-            //     ReadFactoryConfigCalib1();
-            //     ReadFactoryConfigCalib2();
-            // }
 
         }
-
-        /*
-        public unsafe void OnUpdate()
-        {
-            var currentState = new SwitchJoyConRHIDInputState();
-            this.CopyState(out currentState);
-
-            int reportType = currentState.reportId;
-
-            // Connection info
-            BatteryLevel = (BatteryLevelEnum)((currentState.batteryAndConnectionInfo & 0xE0) >> 4);
-            BatteryIsCharging = (currentState.batteryAndConnectionInfo & 0x10) >> 4 != 0;
-
-            int connectionInfo = currentState.batteryAndConnectionInfo & 0x0F;
-            ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
-            IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
-
-            // Left analog stick data
-            var l0 = currentState.rightStick[0];
-            var l1 = currentState.rightStick[1];
-            var l2 = currentState.rightStick[2];
-            var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
-            var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
-
-            // Right analog stick data
-            var r0 = currentState.rightStick[0];
-            var r1 = currentState.rightStick[1];
-            var r2 = currentState.rightStick[2];
-            var rawRightStickHoriz = r0 | ((r1 & 0xF) << 8);
-            var rawRightStickVert = (r1 >> 4) | (r2 << 4);
-
-            RightStick = new Vector2(
-                (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1,
-                (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1
-            );
-
-            if (reportType == 0x21)
-            {
-                SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)currentState.subcommandReplyId;
-                int ack = currentState.subcommandAck;
-                var subcommandWasAcknowledged = (ack & 0x80) != 0;
-
-                Debug.Log("Subcommand received");
-                Debug.Log($"Battery: {BatteryLevel}, controller type: {ControllerType}, is powered by Switch or USB: {IsPoweredBySwitchOrUSB}");
-                Debug.Log($"Subcommand response for {subcommandReplyId}: {ack:X2}");
-
-                if (subcommandWasAcknowledged)
-                {
-                    switch (subcommandReplyId)
-                    {
-                        case SwitchJoyConSubcommandID.SPIFlashRead:
-                            HandleFlashRead(currentState.subcommandReplyData);
-                            break;
-                        default:
-                            Debug.Log($"No code for handling {subcommandReplyId}");
-                            break;
-                    }
-                }
-            }
-
-
-            // If we haven't gotten config data yet, let's ask for it
-            // if (!m_config1DataLoaded) ReadFactoryConfigCalib1();
-            // if (!m_config2DataLoaded) ReadFactoryConfigCalib2();
-        }
-        */
 
         [StructLayout(LayoutKind.Explicit, Size = 12)]
         private unsafe struct FactoryConfigCalib1
@@ -430,29 +330,10 @@ namespace UnityEngine.InputSystem.Switch
             [FieldOffset(9)] public fixed ushort gyroSensitivity[3];
         }
 
-        [StructLayout(LayoutKind.Explicit, Size = 3 * 8 + 1)]
-        private unsafe struct FactoryConfigCalib2
-        {
-            // left analog stick calib
-            [FieldOffset(0)] public fixed byte lStick[9];
-
-            // right analog stick calib
-            [FieldOffset(9)] public fixed byte rStick[9];
-
-            // body rgb (24 bit)
-            [FieldOffset(19)] public Rgb24Bit bodyColor;
-
-            // buttons rgb (24 bit)
-            [FieldOffset(22)] public Rgb24Bit buttonColor;
-        }
-
-
         [StructLayout(LayoutKind.Explicit, Size = 18)]
         private unsafe struct RawStickCalibrationData
         {
-            // Left stick
             [FieldOffset(0)] public fixed byte lStick[9];
-
             [FieldOffset(9)] public fixed byte rStick[9];
         }
 
@@ -470,6 +351,15 @@ namespace UnityEngine.InputSystem.Switch
             }
         }
 
+        [StructLayout(LayoutKind.Explicit, Size = 3 * 4)]
+        private struct ControllerColors
+        {
+            [FieldOffset(0)] public Rgb24Bit bodyColor;
+            [FieldOffset(3)] public Rgb24Bit buttonColor;
+            [FieldOffset(6)] public Rgb24Bit leftGripColor;
+            [FieldOffset(9)] public Rgb24Bit rightGripColor;
+        }
+
         private unsafe void HandleFlashRead(byte* dataPtr)
         {
             byte[] data = new byte[35];
@@ -477,8 +367,7 @@ namespace UnityEngine.InputSystem.Switch
             uint address = BitConverter.ToUInt32(data, 0);
             byte length = data[4];
 
-            byte[] response = new byte[30];
-            Array.Copy(data, 5, response, 0, 30);
+            byte* response = dataPtr + 5;
 
             Debug.Log($"Flash read 0x{address:X4} with length 0x{length:X2}");
 
@@ -503,40 +392,27 @@ namespace UnityEngine.InputSystem.Switch
             // Shipment?
             else if (address == 0x5000 && length == 0x01) { }
 
-            if (address == 0x603D && length == 0x18)
-                HandleFlashRead_FactoryConfigCalibData2(response);
+            // Colors
+            else if (address == 0x6050 && length == 0x2F)
+                DecodeColorData(response);
         }
 
-        private unsafe void DecodeStickCalibrationData(byte[] response)
+        private unsafe void DecodeStickCalibrationData(byte* response)
         {
-            fixed (byte* data = response)
-            {
-                DecodeRightStickData(data + 9);
-            }          
+            DecodeLeftStickData(response);
+            DecodeRightStickData(response + 9);       
         }
 
-        private unsafe void HandleFlashRead_FactoryConfigCalibData2(byte[] response)
+        private unsafe void DecodeColorData(byte* response)
         {
-            FactoryConfigCalib2 dataStruct = new FactoryConfigCalib2();
-            // Put in a struct
-            GCHandle h = GCHandle.Alloc(response, GCHandleType.Pinned);
-            try
-            {
-                dataStruct = (FactoryConfigCalib2)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(FactoryConfigCalib2));
-            }
-            finally
-            {
-                h.Free();
-            }
+            ControllerColors colors = (ControllerColors)Marshal.PtrToStructure((IntPtr)response, typeof(ControllerColors));
+            BodyColor = colors.bodyColor.ToUnityColor();
+            ButtonColor = colors.buttonColor.ToUnityColor();
+            LeftGripColor = colors.leftGripColor.ToUnityColor();
+            RightGripColor = colors.rightGripColor.ToUnityColor();
+            m_colorsLoaded = true;
 
-            DecodeRightStickData(dataStruct.rStick);
-
-            BodyColor = dataStruct.bodyColor.ToUnityColor();
-            ButtonColor = dataStruct.buttonColor.ToUnityColor();
-
-            Debug.Log($"Body color is {BodyColor}, Button color is {ButtonColor}");
-
-            m_config2DataLoaded = true;
+            Debug.Log($"Colors loaded: {BodyColor}, {ButtonColor}");
         }
 
         private unsafe ushort[] DecodeStickData(byte* stickCal)
@@ -551,6 +427,35 @@ namespace UnityEngine.InputSystem.Switch
             data[4] = (ushort)((stickCal[7] << 8) & 0xF00 | stickCal[6]);
             data[5] = (ushort)((stickCal[8] << 4) | (stickCal[7] >> 4));
             return data;
+        }
+
+        private unsafe void DecodeLeftStickData(byte* lStickCal)
+        {
+            ushort[] decoded = DecodeStickData(lStickCal);
+
+            var xAxisMaxAboveCenter = decoded[0];
+            var yAxisMaxAboveCenter = decoded[1];
+            var xAxisCenter = decoded[2];
+            var yAxisCenter = decoded[3];
+            var xAxisMinBelowCenter = decoded[4];
+            var yAxisMinBelowCenter = decoded[5];
+
+
+            var lStickXMin = xAxisCenter - xAxisMinBelowCenter;
+            var lStickXMax = xAxisCenter + xAxisMaxAboveCenter;
+
+            var lStickYMin = yAxisCenter - yAxisMinBelowCenter;
+            var lStickYMax = yAxisCenter + yAxisMaxAboveCenter;
+
+            lStickCalibData = new StickCalibrationData()
+            {
+                xMin = lStickXMin,
+                xMax = lStickXMax,
+                yMin = lStickYMin,
+                yMax = lStickYMax
+            };
+
+            Debug.Log($"Left stick data: {lStickXMin}-{lStickXMax}");
         }
 
         private unsafe void DecodeRightStickData(byte* rStickCal)
@@ -577,8 +482,6 @@ namespace UnityEngine.InputSystem.Switch
                 yMin = rStickYMin,
                 yMax = rStickYMax
             };
-
-            Debug.Log($"Stick calibration data set: {rStickXMin}-{rStickXMax}, {rStickYMin}-{rStickYMax}");
         }
 
         public struct StickCalibrationData

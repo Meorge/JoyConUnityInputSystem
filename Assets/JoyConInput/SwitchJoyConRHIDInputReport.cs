@@ -53,14 +53,17 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.StickCalibrationData rStickCalibData)
+        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.StickCalibrationData lStickCalibData, ref SwitchControllerHID.StickCalibrationData rStickCalibData)
         {
             // Left analog stick data
-            var l0 = rightStick[0];
-            var l1 = rightStick[1];
-            var l2 = rightStick[2];
+            var l0 = leftStick[0];
+            var l1 = leftStick[1];
+            var l2 = leftStick[2];
             var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
             var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
+
+            var leftStickX = (Mathf.InverseLerp(lStickCalibData.xMin, lStickCalibData.xMax, rawLeftStickHoriz) * 2) - 1;
+            var leftStickY = (Mathf.InverseLerp(lStickCalibData.yMin, lStickCalibData.yMax, rawLeftStickVert) * 2) - 1;
 
             // Right analog stick data
             var r0 = rightStick[0];
@@ -74,14 +77,18 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
             var state = new SwitchControllerVirtualInputState
             {
+                leftStickX = leftStickX,
+                leftStickY = leftStickY,
                 rightStickX = rightStickX,
-                rightStickY = (rightStickY)
+                rightStickY = rightStickY
             };
 
             state.Set(SwitchControllerVirtualInputState.Button.Y, (rightButtons & 0x01) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.X, (rightButtons & 0x02) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.B, (rightButtons & 0x04) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.A, (rightButtons & 0x08) != 0);
+            state.Set(SwitchControllerVirtualInputState.Button.SR, ((leftButtons | rightButtons) & 0x10) != 0);
+            state.Set(SwitchControllerVirtualInputState.Button.SL, ((leftButtons | rightButtons) & 0x20) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.R, (rightButtons & 0x40) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.ZR, (rightButtons & 0x80) != 0);
             state.Set(SwitchControllerVirtualInputState.Button.Minus, (sharedButtons & 0x01) != 0);

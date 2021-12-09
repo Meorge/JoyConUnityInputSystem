@@ -16,22 +16,22 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Switch.LowLevel
 {
     #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
-    [StructLayout(LayoutKind.Explicit, Size = 6)]
-    internal struct SwitchControllerVirtualInputState : IInputStateTypeInfo
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe struct SwitchControllerVirtualInputState : IInputStateTypeInfo
     {
         // Switch Controller Virtual State
         public static FourCC Format = new FourCC("SCVS");
         public FourCC format => Format;
 
-        [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
-        [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85")]
-        [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
-        [FieldOffset(0)] public byte leftStickX;
-        [FieldOffset(1)] public byte leftStickY;
+        [InputControl(name = "leftStick", layout = "Stick", format = "VEC2")]
+        // [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        // [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
+        // [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85")]
+        // [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        // [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
+        // [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
+        public float leftStickX;
+        public float leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VEC2")]
         // [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
@@ -40,8 +40,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         // [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
         // [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
         // [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
-        [FieldOffset(2)] public float rightStickX;
-        [FieldOffset(6)] public float rightStickY;
+        public float rightStickX;
+        public float rightStickY;
 
         [InputControl(name = "dpad", layout = "Dpad", format = "BIT", bit = 0, sizeInBits = 4)]
         [InputControl(name = "dpad/up", layout = "Button", bit = (int)Button.Up)]
@@ -60,7 +60,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "rightTrigger", displayName = "ZR", shortDisplayName = "ZR", format = "BIT", layout = "Button", bit = (uint)Button.ZR)]
         [InputControl(name = "start", displayName = "Plus", layout = "Button", bit = (uint)Button.Plus, usage = "Menu")]
         [InputControl(name = "select", displayName = "Minus", layout = "Button", bit = (uint)Button.Minus)]
-        [FieldOffset(10)] public ushort buttons;
+        [InputControl(name = "leftShoulderMini", displayName = "SL", shortDisplayName = "SL", format = "BIT", layout = "Button", bit = (uint)Button.SL)]
+        [InputControl(name = "rightShoulderMini", displayName = "SR", shortDisplayName = "SR", format = "BIT", layout = "Button", bit = (uint)Button.SR)]
+        public uint buttons;
 
  
         public enum Button
@@ -84,6 +86,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             ZR = 13,
             Plus = 14,
             Minus = 15,
+            SL = 16,
+            SR = 17,
 
             X = North,
             B = South,
@@ -94,12 +98,12 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(Button button, bool state)
         {
-            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
-            var bit = (ushort)(1U << (int)button);
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = (uint)(1U << (int)button);
             if (state)
-                buttons = (ushort)(buttons | bit);
+                buttons = (uint)(buttons | bit);
             else
-                buttons &= (ushort)~bit;
+                buttons &= (uint)~bit;
         }
     }
     #endif
