@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Switch;
 
 public class PlayerController : MonoBehaviour
 {
@@ -33,7 +34,7 @@ public class PlayerController : MonoBehaviour
     {
         while (true)
         {
-            SwitchJoyConRHID.current.Rumble(new SwitchJoyConRumbleProfile
+            SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
             {
                 highBandFrequencyR = 100,
                 highBandAmplitudeR = 0,

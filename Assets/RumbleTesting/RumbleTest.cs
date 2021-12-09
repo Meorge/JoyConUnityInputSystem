@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.Switch;
+
 public class RumbleTest : MonoBehaviour
 {
     [SerializeField] private SwitchJoyConRumbleProfile m_profile = SwitchJoyConRumbleProfile.CreateEmpty();
@@ -17,7 +19,7 @@ public class RumbleTest : MonoBehaviour
     [SerializeField] private Image m_bodyColorImage = null;
     [SerializeField] private Image m_buttonColorImage = null;
 
-    private SwitchJoyConRHID jc = null;
+    private SwitchControllerHID jc = null;
 
     private Coroutine playSongCoroutine = null;
 
@@ -33,7 +35,7 @@ public class RumbleTest : MonoBehaviour
         OnHFAmpUpdated(m_hfAmp.value);
         OnLFFreqUpdated(m_lfFreq.value);
         OnLFAmpUpdated(m_lfAmp.value);
-        jc = SwitchJoyConRHID.current;
+        jc = SwitchControllerHID.current;
         // SwitchJoyConRHID.current.RequestDeviceInfo();
         // SwitchJoyConRHID.current.SetInputReportMode(SwitchJoyConInputMode.Simple);
 
@@ -83,7 +85,7 @@ public class RumbleTest : MonoBehaviour
         while (true)
         {
             if (m_toggle.isOn)
-                SwitchJoyConRHID.current.Rumble(m_profile);
+                jc.Rumble(m_profile);
 
             yield return new WaitForSeconds(0.05f);
         }
