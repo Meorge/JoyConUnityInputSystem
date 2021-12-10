@@ -36,7 +36,22 @@ namespace UnityEngine.InputSystem.Switch
             public IMUCalibrationData imuCalibData;
         }
 
-        internal CalibrationData calibrationData = new CalibrationData();
+        internal CalibrationData calibrationData = new CalibrationData() {
+            lStickCalibData = new StickCalibrationData()
+            {
+                xMin = 720,
+                xMax = 3408,
+                yMin = 654,
+                yMax = 2908
+            },
+            rStickCalibData = new StickCalibrationData()
+            {
+                xMin = 720,
+                xMax = 3408,
+                yMin = 654,
+                yMax = 2908
+            }
+        };
 
         public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
         public bool BatteryIsCharging { get; protected set; } = false;
@@ -76,8 +91,11 @@ namespace UnityEngine.InputSystem.Switch
         {
             base.OnAdded();
             SetInputReportMode(SwitchJoyConInputMode.Standard);
-            // ReadColors();
-            // SetIMUEnabled(true);
+
+            // TODO:
+            // - bluetooth handshake
+            // - request device info (which joy-con it is, etc)
+            // - request colors
         }
 
 
@@ -306,7 +324,7 @@ namespace UnityEngine.InputSystem.Switch
             }
 
             // Full report mode!
-            if (genericReport->reportId == 0x30)
+            else if (genericReport->reportId == 0x30)
             {
                 var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
@@ -385,36 +403,62 @@ namespace UnityEngine.InputSystem.Switch
 
             byte* response = dataPtr + 5;
 
-            Debug.Log($"Flash read 0x{address:X4} with length 0x{length:X2}");
-
-            // Handling factory config and calib data
-
             // Serial number
-            if (address == 0x6000 && length == 0x10) {} 
+            if (address == 0x6000 && length == 0x10)
+            {
+                Debug.Log("Read serial number... (not implemented)");
+            } 
 
             // IMU factory calibration
             else if (address == 0x6020 && length == 0x1D)
+            {
+                Debug.Log($"Read IMU calibration data...");
                 DecodeIMUCalibrationData((ushort*)response);
+            }
 
             // Factory analog stick calibration
             else if (address == 0x603D && length == 0x12)
+            {
+                Debug.Log("Read factory analog stick calibration data...");
                 DecodeStickCalibrationData(response);
-
+            }
+                
             // User analog stick calibration
-            else if (address == 0x8010 && length == 0x16) { }
+            else if (address == 0x8010 && length == 0x16)
+            {
+                Debug.Log("Read user analog stick calibration data... (not implemented)");
+            }
 
             // Stick device parameters 1
-            else if (address == 0x6086 && length == 0x12) { }
+            else if (address == 0x6086 && length == 0x12)
+            {
+                Debug.Log("Read stick device params 1 data... (not implemented)");
+            }
 
             // Stick device parameters 2
-            else if (address == 0x6098 && length == 0x12) { }
+            else if (address == 0x6098 && length == 0x12)
+            {
+                Debug.Log("Read stick device params 2 data... (not implemented)");
+            }
 
             // Shipment?
-            else if (address == 0x5000 && length == 0x01) { }
+            else if (address == 0x5000 && length == 0x01)
+            {
+                Debug.Log("Read shipment data... (not implemented)");
+            }
 
             // Colors
             else if (address == 0x6050 && length == 0x2F)
+            {
+                Debug.Log("Read controller color data...");
                 DecodeColorData(response);
+            }
+
+            else
+            {
+                Debug.Log($"Unrecognized range: 0x{address:X4}-0x{address+length:X2}");
+            }
+                
         }
 
         [StructLayout(LayoutKind.Sequential)]

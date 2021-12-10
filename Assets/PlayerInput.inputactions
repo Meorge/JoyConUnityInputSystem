@@ -36,8 +36,8 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "7565871b-475a-46f9-8751-7076ec313284",
-                    "path": "<SwitchJoyConRHID>/hat",
+                    "id": "0a876e27-07ef-438d-8248-45dc0d9a875f",
+                    "path": "<SwitchControllerHID>/rightStick",
                     "interactions": "",
                     "processors": "",
                     "groups": "Joy-Cons",
@@ -498,7 +498,7 @@
             "bindingGroup": "Joy-Cons",
             "devices": [
                 {
-                    "devicePath": "<SwitchJoyConRHID>",
+                    "devicePath": "<SwitchControllerHID>",
                     "isOptional": false,
                     "isOR": false
                 }

@@ -30,8 +30,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         // [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
         // [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
         // [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
-        public float leftStickX;
-        public float leftStickY;
+        public Vector2 leftStick;
+
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VEC2")]
         // [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
@@ -40,8 +40,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         // [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
         // [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
         // [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85,invert=false")]
-        public float rightStickX;
-        public float rightStickY;
+        public Vector2 rightStick;
+
 
         [InputControl(name = "dpad", layout = "Dpad", format = "BIT", bit = 0, sizeInBits = 4)]
         [InputControl(name = "dpad/up", layout = "Button", bit = (int)Button.Up)]
@@ -65,10 +65,10 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public uint buttons;
 
 
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3")]
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", noisy = true)]
         public Vector3 acceleration;
 
-        [InputControl(name = "gyroscope", layout = "Vector3", format = "VEC3")]
+        [InputControl(name = "gyroscope", layout = "Vector3", format = "VEC3", noisy = true)]
         public Vector3 gyroscope;
  
         public enum Button

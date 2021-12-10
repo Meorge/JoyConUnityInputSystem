@@ -79,12 +79,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
             var state = new SwitchControllerVirtualInputState
             {
-                leftStickX = leftStickX,
-                leftStickY = leftStickY,
-                rightStickX = rightStickX,
-                rightStickY = rightStickY,
+                leftStick = new Vector2(leftStickX, leftStickY),
+                rightStick = new Vector2(rightStickX, rightStickY),
                 acceleration = imuData0ms.UncalibratedAcceleration,
-                // gyroscope = imuData10ms.CalibratedGyro(ref calibData.imuCalibData)
                 gyroscope = imuData0ms.UncalibratedGyro
             };
 
