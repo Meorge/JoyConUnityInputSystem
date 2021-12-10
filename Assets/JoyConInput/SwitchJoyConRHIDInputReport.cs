@@ -35,13 +35,13 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(12)] public byte vibratorInputReport;
 
         // For 0x21 (Subcommand replies)
-        [FieldOffset(13)] public byte subcommandAck;
-        [FieldOffset(14)] public byte subcommandReplyId;
-        [FieldOffset(15)] public fixed byte subcommandReplyData[35];
+        // [FieldOffset(13)] public byte subcommandAck;
+        // [FieldOffset(14)] public byte subcommandReplyId;
+        // [FieldOffset(15)] public fixed byte subcommandReplyData[35];
 
 
         // For 0x23 (NFC/IR MCU FW)
-        [FieldOffset(13)] public fixed byte nfcIRMCUFWDataInputReport[37];
+        // [FieldOffset(13)] public fixed byte nfcIRMCUFWDataInputReport[37];
 
         // For 0x30, 0x31, 0x32, 0x33 (normal mode)
         [FieldOffset(13)] public IMUData imuData0ms;
@@ -49,12 +49,14 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(37)] public IMUData imuData10ms;
 
         // For 0x31 (NFC/IR?)
-        [FieldOffset(49)] public fixed byte nfcIRDataInputReport[313];
+        // [FieldOffset(49)] public fixed byte nfcIRDataInputReport[313];
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.StickCalibrationData lStickCalibData, ref SwitchControllerHID.StickCalibrationData rStickCalibData)
+        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData)
         {
+            var lStickCalibData = calibData.lStickCalibData;
+            var rStickCalibData = calibData.rStickCalibData;
             // Left analog stick data
             var l0 = leftStick[0];
             var l1 = leftStick[1];
@@ -80,7 +82,10 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
                 leftStickX = leftStickX,
                 leftStickY = leftStickY,
                 rightStickX = rightStickX,
-                rightStickY = rightStickY
+                rightStickY = rightStickY,
+                acceleration = imuData0ms.UncalibratedAcceleration,
+                // gyroscope = imuData10ms.CalibratedGyro(ref calibData.imuCalibData)
+                gyroscope = imuData0ms.UncalibratedGyro
             };
 
             state.Set(SwitchControllerVirtualInputState.Button.Y, (rightButtons & 0x01) != 0);
@@ -106,15 +111,53 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 96)]
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
     struct IMUData
     {
-        [FieldOffset(0)] short accelX;
-        [FieldOffset(2)] short accelY;
-        [FieldOffset(4)] short accelZ;
+        [FieldOffset(0)] public short accelX;
+        [FieldOffset(2)] public short accelY;
+        [FieldOffset(4)] public short accelZ;
 
-        [FieldOffset(6)] short gyro1;
-        [FieldOffset(8)] short gyro2;
-        [FieldOffset(10)] short gyro3;
+        [FieldOffset(6)] public short gyro1;
+        [FieldOffset(8)] public short gyro2;
+        [FieldOffset(10)] public short gyro3;
+
+        public Vector3 UncalibratedAcceleration => new Vector3(accelX, accelY, accelZ) * 0.000244f;
+        public Vector3 UncalibratedGyro => new Vector3(gyro1, gyro2, gyro3) * 0.070f;
+
+        public Vector3 CalibratedAcceleration(ref SwitchControllerHID.IMUCalibrationData calib)
+        {
+            // var coeffs = new Vector3()
+            // {
+            //     x = (float)(1.0f / (float)(0x4000 - uint16_to_int16(cal_acc_origin))) * 4.0f
+            // };
+
+            var output = new Vector3();
+            return output;
+        }
+
+        public Vector3 CalibratedGyro(ref SwitchControllerHID.IMUCalibrationData calib)
+        {
+            var offset = calib.gyroBase.ToVector3Int16();
+            var coeff = calib.gyroSensitivity;
+
+            float gyro_x = 0;
+            float gyro_y = 0;
+            float gyro_z = 0;
+
+            // gyro X
+            var gyro_cal_coeff_x = (float)(816.0f / (float)(coeff.x - offset.x));
+            gyro_x = (gyro1 - offset.x) * gyro_cal_coeff_x;
+
+            // gyro Y
+            var gyro_cal_coeff_y = (float)(816.0f / (float)(coeff.y - offset.y));
+            gyro_y = (gyro2 - offset.y) * gyro_cal_coeff_y;
+
+            // gyro Z
+            var gyro_cal_coeff_z = (float)(816.0f / (float)(coeff.z - offset.z));
+            gyro_z = (gyro3 - offset.z) * gyro_cal_coeff_z;
+
+            return new Vector3(gyro_x, gyro_y, gyro_z);
+        }
     }
 }

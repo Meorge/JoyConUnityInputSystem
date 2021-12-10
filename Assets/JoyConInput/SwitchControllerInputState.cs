@@ -64,6 +64,12 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "rightShoulderMini", displayName = "SR", shortDisplayName = "SR", format = "BIT", layout = "Button", bit = (uint)Button.SR)]
         public uint buttons;
 
+
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3")]
+        public Vector3 acceleration;
+
+        [InputControl(name = "gyroscope", layout = "Vector3", format = "VEC3")]
+        public Vector3 gyroscope;
  
         public enum Button
         {

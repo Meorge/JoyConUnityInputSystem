@@ -8,23 +8,35 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.Switch
 {
     [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState), displayName = "Joy-Con")]
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [InitializeOnLoad]
-    #endif
+#endif
     public class SwitchControllerHID : InputDevice, IInputUpdateCallbackReceiver, IEventPreProcessor
     {
+        public Vector3Control gyroscope { get; private set; }
+        public ButtonControl buttonSouth { get; private set; }
+        public StickControl rightStick { get; private set; }
+
         private bool m_colorsLoaded = false;
         public Color BodyColor { get; protected set; } = Color.black;
         public Color ButtonColor { get; protected set; } = Color.black;
         public Color LeftGripColor { get; protected set; } = Color.black;
         public Color RightGripColor { get; protected set; } = Color.black;
 
-        private StickCalibrationData lStickCalibData = StickCalibrationData.CreateEmpty();
-        private StickCalibrationData rStickCalibData = StickCalibrationData.CreateEmpty();
+
+        internal struct CalibrationData
+        {
+            public StickCalibrationData lStickCalibData;
+            public StickCalibrationData rStickCalibData;
+            public IMUCalibrationData imuCalibData;
+        }
+
+        internal CalibrationData calibrationData = new CalibrationData();
 
         public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
         public bool BatteryIsCharging { get; protected set; } = false;
@@ -64,7 +76,8 @@ namespace UnityEngine.InputSystem.Switch
         {
             base.OnAdded();
             SetInputReportMode(SwitchJoyConInputMode.Standard);
-            ReadColors();
+            // ReadColors();
+            // SetIMUEnabled(true);
         }
 
 
@@ -73,6 +86,11 @@ namespace UnityEngine.InputSystem.Switch
         protected override void FinishSetup()
         {
             base.FinishSetup();
+
+            buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+            gyroscope = GetChildControl<Vector3Control>("gyroscope");
+
+            rightStick = GetChildControl<StickControl>("rightStick");
         }
 
         public void Rumble(SwitchJoyConRumbleProfile rumbleProfile)
@@ -158,6 +176,15 @@ namespace UnityEngine.InputSystem.Switch
 
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Set LEDs failed");
+        }
+
+        public void ReadIMUCalibrationData()
+        {
+            var readSubcommand = new ReadSPIFlash(atAddress: 0x6020, withLength: 0x1D);
+            Debug.Log($"Requesting IMU calibration info...");
+            var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+            if (ExecuteCommand(ref c) < 0)
+                Debug.LogError("Read IMU calibration info failed");
         }
 
         public void ReadColors()
@@ -266,6 +293,7 @@ namespace UnityEngine.InputSystem.Switch
             if (genericReport->reportId == 0x3f)
             {
                 SetInputReportMode(SwitchJoyConInputMode.Standard);
+                SetIMUEnabled(true);
                 return false;
             }
 
@@ -280,7 +308,7 @@ namespace UnityEngine.InputSystem.Switch
             // Full report mode!
             if (genericReport->reportId == 0x30)
             {
-                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref lStickCalibData, ref rStickCalibData);
+                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
                 return true;
@@ -301,7 +329,7 @@ namespace UnityEngine.InputSystem.Switch
             SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)response.subcommandId;
             var subcommandWasAcknowledged = (response.ack & 0x80) != 0;
 
-            // Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
+            Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
 
             if (subcommandWasAcknowledged)
             {
@@ -316,19 +344,7 @@ namespace UnityEngine.InputSystem.Switch
             }
         }
 
-        public void OnUpdate()
-        {
-
-        }
-
-        [StructLayout(LayoutKind.Explicit, Size = 12)]
-        private unsafe struct FactoryConfigCalib1
-        {
-            [FieldOffset(0)] public fixed ushort accOriginPos[3];
-            [FieldOffset(3)] public fixed ushort accSensitivity[3];
-            [FieldOffset(6)] public fixed ushort gyroOrigin[3];
-            [FieldOffset(9)] public fixed ushort gyroSensitivity[3];
-        }
+        public void OnUpdate() {}
 
         [StructLayout(LayoutKind.Explicit, Size = 18)]
         private unsafe struct RawStickCalibrationData
@@ -376,6 +392,10 @@ namespace UnityEngine.InputSystem.Switch
             // Serial number
             if (address == 0x6000 && length == 0x10) {} 
 
+            // IMU factory calibration
+            else if (address == 0x6020 && length == 0x1D)
+                DecodeIMUCalibrationData((ushort*)response);
+
             // Factory analog stick calibration
             else if (address == 0x603D && length == 0x12)
                 DecodeStickCalibrationData(response);
@@ -395,6 +415,100 @@ namespace UnityEngine.InputSystem.Switch
             // Colors
             else if (address == 0x6050 && length == 0x2F)
                 DecodeColorData(response);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Vector3Int16
+        {
+            public short x;
+            public short y;
+            public short z;
+
+            public override string ToString()
+            {
+                return $"({x}, {y}, {z})";
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Vector3UInt16
+        {
+            public ushort x;
+            public ushort y;
+            public ushort z;
+
+            public override string ToString()
+            {
+                return $"({x}, {y}, {z})";
+            }
+
+            public unsafe Vector3Int16 ToVector3Int16()
+            {
+                var output = new Vector3Int16();
+
+                fixed (void* ptr = &this)
+                {
+                    UnsafeUtility.MemCpy(&output, ptr, 6);
+                }
+
+                // Debug.Log($"{this} -> {output}");
+
+                return output;
+            }
+        }
+
+        public struct IMUCalibrationData
+        {
+            public Vector3UInt16 accelBase;
+            public Vector3UInt16 accelSensitivity;
+
+            public Vector3UInt16 gyroBase;
+            public Vector3UInt16 gyroSensitivity;
+
+            public unsafe static IMUCalibrationData FromResponse(ushort* response)
+            {
+                return new IMUCalibrationData()
+                {
+                    accelBase = new Vector3UInt16()
+                    {
+                        x = response[0],
+                        y = response[1],
+                        z = response[2]
+                    },
+
+                    accelSensitivity = new Vector3UInt16()
+                    {
+                        x = response[3],
+                        y = response[4],
+                        z = response[5]
+                    },
+
+                    gyroBase = new Vector3UInt16()
+                    {
+                        x = response[6],
+                        y = response[7],
+                        z = response[8]
+                    },
+
+                    gyroSensitivity = new Vector3UInt16()
+                    {
+                        x = response[9],
+                        y = response[10],
+                        z = response[11]
+                    }
+                };
+            }
+        
+            public override string ToString()
+            {
+                return $"accelBase = {accelBase}\naccelSen = {accelSensitivity}\ngyroBase = {gyroBase}\ngyroSen = {gyroSensitivity}";
+            }
+        }
+
+        private unsafe void DecodeIMUCalibrationData(ushort* response)
+        {
+            calibrationData.imuCalibData = IMUCalibrationData.FromResponse(response);
+            Debug.Log(calibrationData.imuCalibData);
         }
 
         private unsafe void DecodeStickCalibrationData(byte* response)
@@ -447,15 +561,13 @@ namespace UnityEngine.InputSystem.Switch
             var lStickYMin = yAxisCenter - yAxisMinBelowCenter;
             var lStickYMax = yAxisCenter + yAxisMaxAboveCenter;
 
-            lStickCalibData = new StickCalibrationData()
+            calibrationData.lStickCalibData = new StickCalibrationData()
             {
                 xMin = lStickXMin,
                 xMax = lStickXMax,
                 yMin = lStickYMin,
                 yMax = lStickYMax
             };
-
-            Debug.Log($"Left stick data: {lStickXMin}-{lStickXMax}");
         }
 
         private unsafe void DecodeRightStickData(byte* rStickCal)
@@ -475,13 +587,15 @@ namespace UnityEngine.InputSystem.Switch
             var rStickYMin = yAxisCenter - yAxisMinBelowCenter;
             var rStickYMax = yAxisCenter + yAxisMaxAboveCenter;
 
-            rStickCalibData = new StickCalibrationData()
+            calibrationData.rStickCalibData = new StickCalibrationData()
             {
                 xMin = rStickXMin,
                 xMax = rStickXMax,
                 yMin = rStickYMin,
                 yMax = rStickYMax
             };
+
+            Debug.Log("right stick data calib received");
         }
 
         public struct StickCalibrationData
