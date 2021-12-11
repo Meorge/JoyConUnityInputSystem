@@ -18,8 +18,29 @@ namespace UnityEngine.InputSystem.Switch
 #endif
     public class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
     {
-        public Vector3Control gyroscope { get; private set; }
+        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control orientation { get; private set; }
+        public Vector3Control acceleration { get; private set; }
+
+        public DpadControl dpad { get; private set; }
+
+        public ButtonControl buttonWest { get; private set; }
+        public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
+        public ButtonControl buttonEast { get; private set; }
+
+        public ButtonControl leftShoulder { get; private set; }
+        public ButtonControl rightShoulder { get; private set; }
+        public ButtonControl leftStickPress { get; private set; }
+        public ButtonControl rightStickPress { get; private set; }
+        public ButtonControl leftTrigger { get; private set; }
+        public ButtonControl rightTrigger { get; private set; }
+        public ButtonControl start { get; private set; }
+        public ButtonControl select { get; private set; }
+        public ButtonControl leftShoulderMini { get; private set; }
+        public ButtonControl rightShoulderMini { get; private set; }
+        
+        public StickControl leftStick { get; private set; }
         public StickControl rightStick { get; private set; }
 
         private bool m_colorsLoaded = false;
@@ -28,6 +49,7 @@ namespace UnityEngine.InputSystem.Switch
         public Color LeftGripColor { get; protected set; } = Color.black;
         public Color RightGripColor { get; protected set; } = Color.black;
 
+        private Vector3 m_currentOrientation = new Vector3();
 
         internal struct CalibrationData
         {
@@ -103,16 +125,6 @@ namespace UnityEngine.InputSystem.Switch
         {
             StateEvent.FromUnchecked(eventPtr)->stateFormat = new FourCC("SCVS");
             InputState.Change(this, eventPtr);
-            // try
-            // {
-            //      InputState.Change(this, eventPtr);
-            // }
-            // catch (System.Exception)
-            // {
-            //     // TODO: figure out how to fix this error "State format HID from event does mot match state format SCVS of device"
-            //     // It's fine, that's to be expected because we're converting it, 
-            // }
-            
         }
 
         public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
@@ -168,9 +180,28 @@ namespace UnityEngine.InputSystem.Switch
         {
             base.FinishSetup();
 
+            buttonWest = GetChildControl<ButtonControl>("buttonWest");
+            buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
             buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
-            gyroscope = GetChildControl<Vector3Control>("gyroscope");
+            buttonEast = GetChildControl<ButtonControl>("buttonEast");
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
+            orientation = GetChildControl<Vector3Control>("orientation");
+            acceleration = GetChildControl<Vector3Control>("acceleration");
 
+            dpad = GetChildControl<DpadControl>("dpad");
+            
+            leftShoulder = GetChildControl<ButtonControl>("leftShoulder");
+            rightShoulder = GetChildControl<ButtonControl>("rightShoulder");
+            leftStickPress = GetChildControl<ButtonControl>("leftStickPress");
+            rightStickPress = GetChildControl<ButtonControl>("rightStickPress");
+            leftTrigger = GetChildControl<ButtonControl>("leftTrigger");
+            rightTrigger = GetChildControl<ButtonControl>("rightTrigger");
+            start = GetChildControl<ButtonControl>("start");
+            select = GetChildControl<ButtonControl>("select");
+            leftShoulderMini = GetChildControl<ButtonControl>("leftShoulderMini");
+            rightShoulderMini = GetChildControl<ButtonControl>("rightShoulderMini");
+
+            leftStick = GetChildControl<StickControl>("leftStick");
             rightStick = GetChildControl<StickControl>("rightStick");
         }
 
@@ -382,7 +413,6 @@ namespace UnityEngine.InputSystem.Switch
             if (genericReport->reportId == 0x3f)
             {
                 SetInputReportMode(SwitchJoyConInputMode.Standard);
-                SetIMUEnabled(true);
                 return false;
             }
 
@@ -397,9 +427,11 @@ namespace UnityEngine.InputSystem.Switch
             // Full report mode!
             else if (genericReport->reportId == 0x30)
             {
-                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData);
+                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, m_currentOrientation);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
+
+                m_currentOrientation += data.angularVelocity;
                 return true;
             }
             return false;

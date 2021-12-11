@@ -46,7 +46,7 @@ public class PlayerController : MonoBehaviour
     void OnMove(InputValue value)
     {
         var tempMovement = value.Get<Vector2>() * 0.1f;
-        if (tempMovement.magnitude < 100) m_movement = tempMovement;
+        m_movement = tempMovement;
         Debug.Log(m_movement);
     }
 
@@ -60,8 +60,6 @@ public class PlayerController : MonoBehaviour
         if (!c.gameObject.CompareTag("Block")) return;
         Debug.Log("Hit something");
         StartCoroutine(QuickRumble());
-
-        // rb.AddForce(c.impulse * 100f, ForceMode.Impulse);
     }
 
     IEnumerator QuickRumble()

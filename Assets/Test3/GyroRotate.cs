@@ -17,8 +17,8 @@ public class GyroRotate : MonoBehaviour
         if (SwitchControllerHID.current.buttonSouth.wasPressedThisFrame)
         {
             // SwitchControllerHID.current.ReadIMUCalibrationData();
-            // SwitchControllerHID.current.SetIMUEnabled(true);
+            SwitchControllerHID.current.SetIMUEnabled(true);
         }
-        // transform.eulerAngles += SwitchControllerHID.current.gyroscope.ReadValue() * 0.01f;
+        transform.eulerAngles = SwitchControllerHID.current.orientation.ReadValue() * 0.1f;
     }
 }
