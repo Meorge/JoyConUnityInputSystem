@@ -39,7 +39,7 @@
                     "id": "0a876e27-07ef-438d-8248-45dc0d9a875f",
                     "path": "<SwitchControllerHID>/rightStick",
                     "interactions": "",
-                    "processors": "StickDeadzone",
+                    "processors": "",
                     "groups": "Joy-Cons",
                     "action": "Move",
                     "isComposite": false,

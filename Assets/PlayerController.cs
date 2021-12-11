@@ -46,8 +46,13 @@ public class PlayerController : MonoBehaviour
     void OnMove(InputValue value)
     {
         var tempMovement = value.Get<Vector2>() * 0.1f;
+        
+        if (tempMovement.magnitude > 10)
+        {
+            Debug.Log($"Got a movement vector of {tempMovement}, too big so discarding");
+            return;
+        }
         m_movement = tempMovement;
-        Debug.Log(m_movement);
     }
 
     void OnFire()
@@ -69,7 +74,7 @@ public class PlayerController : MonoBehaviour
             highBandFrequencyR = 150,
             highBandAmplitudeR = 1
         });
-        yield return new WaitForSeconds(0.05f);
+        yield return new WaitForSeconds(0.02f);
         SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
         {
             highBandFrequencyR = 115,
