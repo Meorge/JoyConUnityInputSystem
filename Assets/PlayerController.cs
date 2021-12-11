@@ -10,25 +10,22 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] Vector2 m_movement = new Vector2();
 
+    Rigidbody rb;
+
     float amp = 0f;
 
     // Start is called before the first frame update
     void Start()
     {
-        // SwitchControllerHID.current.
-        // SwitchJoyConRHID.current.SetStandardReportMode();
-        // StartCoroutine(RumbleCoroutine());
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
         transform.Translate(new Vector3(m_movement.x, 0, m_movement.y));
-
+        // rb.AddForce(new Vector3(m_movement.x, 0, m_movement.y));
         amp = (Mathf.Sin(Time.time) + 1) / 2;
-
-        // Debug.Log($"From Update: {SwitchJoyConRHID.current.hat.ReadValue()}");
-        // Debug.Log(amp);
     }
 
     // IEnumerator RumbleCoroutine()
@@ -48,19 +45,37 @@ public class PlayerController : MonoBehaviour
 
     void OnMove(InputValue value)
     {
-        m_movement = value.Get<Vector2>();
-        Debug.Log($"From OnMove: {m_movement}");
+        var tempMovement = value.Get<Vector2>() * 0.1f;
+        if (tempMovement.magnitude < 100) m_movement = tempMovement;
+        Debug.Log(m_movement);
     }
 
     void OnFire()
     {
         Debug.Log("doing command");
-        // SwitchJoyConRHID.current.Rumble(new SwitchJoyConRumbleProfile
-        // {
-        //     highBandFrequencyR = 320,
-        //     highBandAmplitudeR = 0.0f,
-        //     lowBandFrequencyR = 320,
-        //     lowBandAmplitudeR = 0.8f
-        // });
+    }
+
+    void OnCollisionEnter(Collision c)
+    {
+        if (!c.gameObject.CompareTag("Block")) return;
+        Debug.Log("Hit something");
+        StartCoroutine(QuickRumble());
+
+        // rb.AddForce(c.impulse * 100f, ForceMode.Impulse);
+    }
+
+    IEnumerator QuickRumble()
+    {
+        SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+        {
+            highBandFrequencyR = 150,
+            highBandAmplitudeR = 1
+        });
+        yield return new WaitForSeconds(0.05f);
+        SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+        {
+            highBandFrequencyR = 115,
+            highBandAmplitudeR = 0
+        });
     }
 }

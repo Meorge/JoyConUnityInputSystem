@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Switch
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    public class SwitchControllerHID : InputDevice, IInputUpdateCallbackReceiver, IEventPreProcessor
+    public class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
     {
         public Vector3Control gyroscope { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -56,6 +56,7 @@ namespace UnityEngine.InputSystem.Switch
         public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
         public bool BatteryIsCharging { get; protected set; } = false;
         public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
+        public SpecificControllerTypeEnum SpecificControllerType { get; protected set; } = SpecificControllerTypeEnum.Unknown;
         public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
 
         private bool m_config1DataLoaded = false;
@@ -64,6 +65,8 @@ namespace UnityEngine.InputSystem.Switch
 
         private const int configTimerDataDefault = 500;
         private int m_configDataTimer = configTimerDataDefault;
+
+        private bool m_deviceInfoLoaded = false;
 
         static SwitchControllerHID()
         {
@@ -92,14 +95,74 @@ namespace UnityEngine.InputSystem.Switch
             base.OnAdded();
             SetInputReportMode(SwitchJoyConInputMode.Standard);
 
-            // TODO:
-            // - bluetooth handshake
-            // - request device info (which joy-con it is, etc)
-            // - request colors
+            m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+            m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
         }
 
+        public unsafe void OnStateEvent(InputEventPtr eventPtr)
+        {
+            StateEvent.FromUnchecked(eventPtr)->stateFormat = new FourCC("SCVS");
+            InputState.Change(this, eventPtr);
+            // try
+            // {
+            //      InputState.Change(this, eventPtr);
+            // }
+            // catch (System.Exception)
+            // {
+            //     // TODO: figure out how to fix this error "State format HID from event does mot match state format SCVS of device"
+            //     // It's fine, that's to be expected because we're converting it, 
+            // }
+            
+        }
 
-        public void OnNextUpdate() { }
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
+        }
+
+        
+        public void OnNextUpdate()
+        {
+            if (!m_colorsLoaded)
+            {
+                UpdateColors();
+                return;
+            }
+            if (!m_deviceInfoLoaded)
+            {
+                UpdateDeviceInfo();
+                return;
+            }
+        }
+
+        private const double timeout = 1.0;
+
+        private double m_colorsTimeOfLastRequest;
+        private void UpdateColors()
+        {
+            // Colors aren't loaded yet.
+            var currentTime = InputRuntime.s_Instance.currentTime;
+
+            // Are we waiting for a response?
+            if (currentTime > m_colorsTimeOfLastRequest + timeout)
+            {
+                m_colorsTimeOfLastRequest = currentTime;
+                ReadColors();
+            }
+        }
+
+        private double m_infoTimeOfLastRequest;
+        private void UpdateDeviceInfo()
+        {
+            var currentTime = InputRuntime.s_Instance.currentTime;
+
+            // Are we waiting for a response?
+            if (currentTime > m_infoTimeOfLastRequest + timeout)
+            {
+                m_infoTimeOfLastRequest = currentTime;
+                ReadControllerInfo();
+            }
+        }
 
         protected override void FinishSetup()
         {
@@ -121,7 +184,7 @@ namespace UnityEngine.InputSystem.Switch
             }
         }
 
-        public void RequestDeviceInfo()
+        public void ReadControllerInfo()
         {
             Debug.Log("Requesting device info...");
             var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
@@ -262,6 +325,14 @@ namespace UnityEngine.InputSystem.Switch
             ProControllerOrChargingGrip = 0
         }
 
+        public enum SpecificControllerTypeEnum : byte
+        {
+            Unknown = 0,
+            LeftJoyCon = 1,
+            RightJoyCon = 2,
+            ProController = 3
+        }
+
         [StructLayout(LayoutKind.Explicit)]
         private struct SwitchControllerGenericInputReport
         {
@@ -353,6 +424,9 @@ namespace UnityEngine.InputSystem.Switch
             {
                 switch (subcommandReplyId)
                 {
+                    case SwitchJoyConSubcommandID.RequestDeviceInfo:
+                        HandleDeviceInfo(response.replyData);
+                        break;
                     case SwitchJoyConSubcommandID.SPIFlashRead:
                         HandleFlashRead(response.replyData);
                         break;
@@ -362,7 +436,25 @@ namespace UnityEngine.InputSystem.Switch
             }
         }
 
-        public void OnUpdate() {}
+        [StructLayout(LayoutKind.Sequential)]
+        private unsafe struct DeviceInfo
+        {
+            public ushort firmwareVersion;
+            public byte joyConType;
+            public byte unknown1;
+            public fixed byte macAddress[6];
+            public byte unknown2;
+            public byte useColorsFromSPI;
+        }
+
+        private unsafe void HandleDeviceInfo(byte* dataPtr)
+        {
+            DeviceInfo deviceInfo = (DeviceInfo)Marshal.PtrToStructure((IntPtr)dataPtr, typeof(DeviceInfo));
+            SpecificControllerType = (SpecificControllerTypeEnum)deviceInfo.joyConType;
+
+            Debug.Log($"Firmware version is: {deviceInfo.firmwareVersion}, Joy-Con type is {SpecificControllerType}");
+            m_deviceInfoLoaded = true;
+        }
 
         [StructLayout(LayoutKind.Explicit, Size = 18)]
         private unsafe struct RawStickCalibrationData

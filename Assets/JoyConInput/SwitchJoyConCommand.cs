@@ -41,14 +41,6 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
     [FieldOffset(InputDeviceCommand.BaseCommandSize + 10)]
     public SwitchJoyConBaseSubcommandStruct subcommand;
 
-
-    // [FieldOffset(InputDeviceCommand.BaseCommandSize + 10)]
-    // public byte subcommandId;
-
-
-    // [FieldOffset(InputDeviceCommand.BaseCommandSize + 11)]
-    // public fixed byte subcommandArg[8];
-
     
     public static SwitchJoyConCommand Create(SwitchJoyConRumbleProfile? rumbleProfile = null, SwitchJoyConBaseSubcommand subcommand = null)
     {
@@ -86,15 +78,7 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
             globalCount = globalNumber++,
             rumbleData = rumbleData,
             subcommand = subcommand.GetSubcommand()
-            // subcommandId = 0x30,
         };
-
-        // byte[] argument = new byte[1] { 0x01 };
-
-        // IntPtr ptr = new IntPtr((void*)command.subcommandArg);
-        // Marshal.Copy(argument, 0, ptr, 1);
         return command;
-        // subcommandArg = new byte[1] { 0x20 }
-        // subcommand = subcommand.GetSubcommand()
     }
 }
