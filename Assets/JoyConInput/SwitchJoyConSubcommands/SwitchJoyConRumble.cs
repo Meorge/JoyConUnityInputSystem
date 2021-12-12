@@ -85,6 +85,9 @@ internal struct SwitchJoyConRumbleAmpFreqData
 
     public static SwitchJoyConRumbleAmpFreqData Create(float highBandFrequency, float highBandAmplitude, float lowBandFrequency, float lowBandAmplitude)
     {
+        highBandAmplitude = Mathf.Clamp01(highBandAmplitude);
+        lowBandAmplitude = Mathf.Clamp01(lowBandAmplitude);
+        
         ushort hf = FrequencyToHFRange(highBandFrequency);
         ushort hf_amp = AmplitudeToHFAmp(highBandAmplitude);
 
@@ -96,6 +99,8 @@ internal struct SwitchJoyConRumbleAmpFreqData
 
         byte byte2 = (byte)(lf + ((lf_amp >> 8) & 0xFF));
         byte byte3 = (byte)(lf_amp & 0xFF);
+        
+        Debug.Log($"HB {highBandFrequency} amp {highBandAmplitude}; LB {lowBandFrequency} amp {lowBandAmplitude}");
 
         return new SwitchJoyConRumbleAmpFreqData
         {

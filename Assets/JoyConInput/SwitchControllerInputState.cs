@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public static FourCC Format = new FourCC("SCVS");
         public FourCC format => Format;
 
-        [InputControl(name = "leftStick", layout = "Stick", format = "VEC2", processors = "StickDeadzone(min=0.15,max=1)")]
+        [InputControl(name = "leftStick", displayName = "Left Stick", layout = "Stick", format = "VEC2", processors = "StickDeadzone(min=0.15,max=1)")]
         // [InputControl(name = "leftStick/x", offset = 0, format = "FLT", parameters = "normalize,normalizeMin=-1,normalizeMax=1")]
         // [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.15,clampMax=0.5,invert")]
         // [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=0.85")]
@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         public Vector2 leftStick;
 
 
-        [InputControl(name = "rightStick", layout = "Stick", format = "VEC2", processors = "StickDeadzone(min=0.15,max=1)")]
+        [InputControl(name = "rightStick", displayName = "Right Stick", layout = "Stick", format = "VEC2", processors = "StickDeadzone(min=0.15,max=1)")]
         // [InputControl(name = "rightStick/x", offset = 0, format = "FLT")]
         // [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
         // [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]

@@ -92,18 +92,25 @@ namespace UnityEngine.InputSystem.Switch
 
         static SwitchControllerHID()
         {
-            var matcherR = new InputDeviceMatcher()
-                .WithInterface("HID")
-                .WithCapability("vendorId", 0x57E)
-                .WithCapability("productId", 0x2007);
-
             var matcherL = new InputDeviceMatcher()
                 .WithInterface("HID")
                 .WithCapability("vendorId", 0x57E)
                 .WithCapability("productId", 0x2006);
+            
+            var matcherR = new InputDeviceMatcher()
+                .WithInterface("HID")
+                .WithCapability("vendorId", 0x57E)
+                .WithCapability("productId", 0x2007);
+            
+            var matcherPro = new InputDeviceMatcher()
+                .WithInterface("HID")
+                .WithCapability("vendorId", 0x57E)
+                .WithCapability("productId", 0x2009);
 
-            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherR);
             InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherL);
+            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherR);
+            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherPro);
+            
             Debug.Log($"Joy-Con layout registered");
         }
 
@@ -207,7 +214,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void Rumble(SwitchJoyConRumbleProfile rumbleProfile)
         {
-            var c = SwitchJoyConCommand.Create(rumbleProfile);
+            var c = SwitchControllerCommand.Create(rumbleProfile);
             long returned = ExecuteCommand(ref c);
             if (returned < 0)
             {
@@ -218,7 +225,7 @@ namespace UnityEngine.InputSystem.Switch
         public void ReadControllerInfo()
         {
             Debug.Log("Requesting device info...");
-            var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
             long returned = ExecuteCommand(ref c);
             if (returned < 0)
             {
@@ -231,15 +238,15 @@ namespace UnityEngine.InputSystem.Switch
             // step 1
             var s1 = new SwitchJoyConBluetoothManualPairingSubcommand();
             s1.ValueByte = 0x01;
-            var c1 = SwitchJoyConCommand.Create(subcommand: s1);
+            var c1 = SwitchControllerCommand.Create(subcommand: s1);
 
             var s2 = new SwitchJoyConBluetoothManualPairingSubcommand();
             s2.ValueByte = 0x02;
-            var c2 = SwitchJoyConCommand.Create(subcommand: s2);
+            var c2 = SwitchControllerCommand.Create(subcommand: s2);
 
             var s3 = new SwitchJoyConBluetoothManualPairingSubcommand();
             s3.ValueByte = 0x03;
-            var c3 = SwitchJoyConCommand.Create(subcommand: s3);
+            var c3 = SwitchControllerCommand.Create(subcommand: s3);
 
             if (ExecuteCommand(ref c1) < 0)
                 Debug.LogError("Step 1 of bluetooth pairing failed");
@@ -253,7 +260,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void SetInputReportMode(SwitchJoyConInputMode mode)
         {
-            var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError($"Set report mode to {mode} failed");
         }
@@ -263,7 +270,7 @@ namespace UnityEngine.InputSystem.Switch
             var s = new SwitchJoyConSetIMUEnabledSubcommand();
             s.Enabled = active;
 
-            var c = SwitchJoyConCommand.Create(subcommand: s);
+            var c = SwitchControllerCommand.Create(subcommand: s);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError($"Set IMU active to {active} failed");
         }
@@ -273,7 +280,7 @@ namespace UnityEngine.InputSystem.Switch
             var s = new SwitchJoyConSetVibrationEnabledSubcommand();
             s.Enabled = active;
 
-            var c = SwitchJoyConCommand.Create(subcommand: s);
+            var c = SwitchControllerCommand.Create(subcommand: s);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError($"Set vibration active to {active} failed");
         }
@@ -284,7 +291,7 @@ namespace UnityEngine.InputSystem.Switch
             SwitchJoyConLEDStatus p3 = SwitchJoyConLEDStatus.Off,
             SwitchJoyConLEDStatus p4 = SwitchJoyConLEDStatus.Off)
         {
-            var c = SwitchJoyConCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
 
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Set LEDs failed");
@@ -294,7 +301,7 @@ namespace UnityEngine.InputSystem.Switch
         {
             var readSubcommand = new ReadSPIFlash(atAddress: 0x6020, withLength: 0x1D);
             Debug.Log($"Requesting IMU calibration info...");
-            var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+            var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Read IMU calibration info failed");
         }
@@ -303,7 +310,7 @@ namespace UnityEngine.InputSystem.Switch
         {
             var readSubcommand = new ReadSPIFlash(atAddress: 0x6050, withLength: 0x2F);
             Debug.Log($"Requesting color info...");
-            var c = SwitchJoyConCommand.Create(subcommand: readSubcommand);
+            var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Read color info failed");
         }

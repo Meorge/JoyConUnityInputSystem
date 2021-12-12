@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 using System.Collections;
 
 [StructLayout(LayoutKind.Explicit, Size = kSize)]
-internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
+internal unsafe struct SwitchControllerCommand : IInputDeviceCommandInfo
 {
     private static byte globalNumber = 0x0;
 
@@ -42,7 +42,7 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
     public SwitchJoyConBaseSubcommandStruct subcommand;
 
     
-    public static SwitchJoyConCommand Create(SwitchJoyConRumbleProfile? rumbleProfile = null, SwitchJoyConBaseSubcommand subcommand = null)
+    public static SwitchControllerCommand Create(SwitchJoyConRumbleProfile? rumbleProfile = null, SwitchJoyConBaseSubcommand subcommand = null)
     {
         SwitchJoyConRumbleData rumbleData;
         if (rumbleProfile != null)
@@ -71,7 +71,7 @@ internal unsafe struct SwitchJoyConCommand : IInputDeviceCommandInfo
         if (subcommand == null)
             subcommand = new SwitchJoyConEmptySubcommand();
 
-        var command = new SwitchJoyConCommand
+        var command = new SwitchControllerCommand
         {
             baseCommand = new InputDeviceCommand(Type, kSize),
             first = 0x01,

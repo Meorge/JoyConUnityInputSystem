@@ -41,9 +41,9 @@ public class RumbleTest : MonoBehaviour
     }
 
     void Update() {
-        if (jc.buttonSouth.wasPressedThisFrame) {
-            PlaySong();
-        }
+        // if (jc.buttonSouth.wasPressedThisFrame) {
+        //     PlaySong();
+        // }
 
         m_bodyColorImage.color = jc.BodyColor;
         m_buttonColorImage.color = jc.ButtonColor;
@@ -64,9 +64,11 @@ public class RumbleTest : MonoBehaviour
     {
         while (true)
         {
-            if (playSongCoroutine != null && m_toggle.isOn)
+            if (m_toggle.isOn)
+            {
                 jc.Rumble(m_profile);
-
+            }
+                
             yield return new WaitForSeconds(0.05f);
         }
     }
@@ -137,21 +139,25 @@ public class RumbleTest : MonoBehaviour
 
     public void OnHFFreqUpdated(float v)
     {
+        m_profile.highBandFrequencyL = v;
         m_profile.highBandFrequencyR = v;
     }
 
     public void OnHFAmpUpdated(float v)
     {
+        m_profile.highBandAmplitudeL = v;
         m_profile.highBandAmplitudeR = v;
     }
 
     public void OnLFFreqUpdated(float v)
     {
+        m_profile.lowBandFrequencyL = v;
         m_profile.lowBandFrequencyR = v;
     }
 
     public void OnLFAmpUpdated(float v)
     {
+        m_profile.lowBandAmplitudeL = v;
         m_profile.lowBandAmplitudeR = v;
     }
 }

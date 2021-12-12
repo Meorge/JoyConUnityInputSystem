@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             float gyro_x = 0;
             float gyro_y = 0;
             float gyro_z = 0;
-
+            
             // gyro X
             var gyro_cal_coeff_x = (float)(816.0f / (float)(coeff.x - offset.x));
             gyro_x = (gyro1 - offset.x) * gyro_cal_coeff_x;
