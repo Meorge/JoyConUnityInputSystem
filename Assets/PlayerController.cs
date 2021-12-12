@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        StartCoroutine(RumbleCoroutine());
+        // StartCoroutine(RumbleCoroutine());
     }
 
     // Update is called once per frame
@@ -69,13 +69,14 @@ public class PlayerController : MonoBehaviour
     void OnFire()
     {
         Debug.Log("doing command");
+        StartCoroutine(QuickRumble());
     }
 
     void OnCollisionEnter(Collision c)
     {
         if (!c.gameObject.CompareTag("Block")) return;
         Debug.Log("Hit something");
-        StartCoroutine(QuickRumble());
+        //StartCoroutine(QuickRumble());
     }
 
     IEnumerator QuickRumble()

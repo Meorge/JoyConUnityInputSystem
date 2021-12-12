@@ -53,32 +53,41 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, Vector3 currentOrientation)
+        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, SwitchControllerHID.SpecificControllerTypeEnum controllerType, Vector3 currentOrientation)
         {
-            var lStickCalibData = calibData.lStickCalibData;
-            var rStickCalibData = calibData.rStickCalibData;
-            // Left analog stick data
-            var l0 = leftStick[0];
-            var l1 = leftStick[1];
-            var l2 = leftStick[2];
-            var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
-            var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
+            var leftStickVec = Vector2.zero;
+            var rightStickVec = Vector2.zero;
+            if (controllerType == SwitchControllerHID.SpecificControllerTypeEnum.LeftJoyCon ||
+                controllerType == SwitchControllerHID.SpecificControllerTypeEnum.ProController)
+            {
+                // Left analog stick data
+                var lStickCalibData = calibData.lStickCalibData;
+                var l0 = leftStick[0];
+                var l1 = leftStick[1];
+                var l2 = leftStick[2];
+                var rawLeftStickHoriz = l0 | ((l1 & 0xF) << 8);
+                var rawLeftStickVert = (l1 >> 4) | (l2 << 4);
 
-            var leftStickX = (Mathf.InverseLerp(lStickCalibData.xMin, lStickCalibData.xMax, rawLeftStickHoriz) * 2) - 1;
-            var leftStickY = (Mathf.InverseLerp(lStickCalibData.yMin, lStickCalibData.yMax, rawLeftStickVert) * 2) - 1;
+                var leftStickX = (Mathf.InverseLerp(lStickCalibData.xMin, lStickCalibData.xMax, rawLeftStickHoriz) * 2) - 1;
+                var leftStickY = (Mathf.InverseLerp(lStickCalibData.yMin, lStickCalibData.yMax, rawLeftStickVert) * 2) - 1;
+                leftStickVec = new Vector2(leftStickX, leftStickY);
+            }
 
-            // Right analog stick data
-            var r0 = rightStick[0];
-            var r1 = rightStick[1];
-            var r2 = rightStick[2];
-            var rawRightStickHoriz = r0 | ((r1 & 0xF) << 8);
-            var rawRightStickVert = (r1 >> 4) | (r2 << 4);
+            if (controllerType == SwitchControllerHID.SpecificControllerTypeEnum.RightJoyCon ||
+                controllerType == SwitchControllerHID.SpecificControllerTypeEnum.ProController)
+            {
+                // Right analog stick data
+                var rStickCalibData = calibData.rStickCalibData;
+                var r0 = rightStick[0];
+                var r1 = rightStick[1];
+                var r2 = rightStick[2];
+                var rawRightStickHoriz = r0 | ((r1 & 0xF) << 8);
+                var rawRightStickVert = (r1 >> 4) | (r2 << 4);
 
-            var rightStickX = (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1;
-            var rightStickY = (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1;
-
-            var leftStickVec = new Vector2(leftStickX, leftStickY);
-            var rightStickVec = new Vector2(rightStickX, rightStickY);
+                var rightStickX = (Mathf.InverseLerp(rStickCalibData.xMin, rStickCalibData.xMax, rawRightStickHoriz) * 2) - 1;
+                var rightStickY = (Mathf.InverseLerp(rStickCalibData.yMin, rStickCalibData.yMax, rawRightStickVert) * 2) - 1;
+                rightStickVec = new Vector2(rightStickX, rightStickY);
+            }
 
             // Debug.Log($"Creating input stuff: right stick is {rightStickVec}");
             var state = new SwitchControllerVirtualInputState

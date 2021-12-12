@@ -434,7 +434,7 @@ namespace UnityEngine.InputSystem.Switch
             // Full report mode!
             else if (genericReport->reportId == 0x30)
             {
-                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, m_currentOrientation);
+                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
 
