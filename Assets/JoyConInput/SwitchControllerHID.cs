@@ -12,11 +12,11 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.Switch
 {
-    [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState), displayName = "Joy-Con")]
+    [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState))]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    public class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
+    public abstract class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
     {
         public Vector3Control angularVelocity { get; private set; }
         public Vector3Control orientation { get; private set; }
@@ -92,26 +92,6 @@ namespace UnityEngine.InputSystem.Switch
 
         static SwitchControllerHID()
         {
-            var matcherL = new InputDeviceMatcher()
-                .WithInterface("HID")
-                .WithCapability("vendorId", 0x57E)
-                .WithCapability("productId", 0x2006);
-            
-            var matcherR = new InputDeviceMatcher()
-                .WithInterface("HID")
-                .WithCapability("vendorId", 0x57E)
-                .WithCapability("productId", 0x2007);
-            
-            var matcherPro = new InputDeviceMatcher()
-                .WithInterface("HID")
-                .WithCapability("vendorId", 0x57E)
-                .WithCapability("productId", 0x2009);
-
-            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherL);
-            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherR);
-            InputSystem.RegisterLayout<SwitchControllerHID>(matches: matcherPro);
-            
-            Debug.Log($"Joy-Con layout registered");
         }
 
 

@@ -37,9 +37,9 @@
                 {
                     "name": "",
                     "id": "0a876e27-07ef-438d-8248-45dc0d9a875f",
-                    "path": "<SwitchControllerHID>/rightStick",
+                    "path": "<SwitchJoyConLHID>/leftStick",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "StickDeadzone(min=0.2)",
                     "groups": "Joy-Cons",
                     "action": "Move",
                     "isComposite": false,
@@ -48,11 +48,22 @@
                 {
                     "name": "",
                     "id": "62cd053c-2a64-4180-95f2-964739bc6e25",
-                    "path": "<SwitchJoyConRHID>/hat/up",
+                    "path": "<SwitchJoyConRHID>/buttonEast",
                     "interactions": "",
                     "processors": "",
                     "groups": "Joy-Cons;Keyboard&Mouse",
                     "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fe66f3da-51e7-489f-a5aa-026f291a26e9",
+                    "path": "<SwitchJoyConRHID>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Look",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -498,7 +509,12 @@
             "bindingGroup": "Joy-Cons",
             "devices": [
                 {
-                    "devicePath": "<SwitchControllerHID>",
+                    "devicePath": "<SwitchJoyConLHID>",
+                    "isOptional": false,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<SwitchJoyConRHID>",
                     "isOptional": false,
                     "isOR": false
                 }
