@@ -1,7 +1,5 @@
 using System;
 using UnityEditor;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -102,7 +100,7 @@ namespace UnityEngine.InputSystem.Switch
         protected override void OnAdded()
         {
             base.OnAdded();
-            SetInputReportMode(SwitchJoyConInputMode.Standard);
+            SetInputReportMode(SwitchControllerInputModeEnum.Standard);
 
             m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
             m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
@@ -192,7 +190,7 @@ namespace UnityEngine.InputSystem.Switch
             rightStick = GetChildControl<StickControl>("rightStick");
         }
 
-        public void Rumble(SwitchJoyConRumbleProfile rumbleProfile)
+        public void Rumble(SwitchControllerRumbleProfile rumbleProfile)
         {
             var c = SwitchControllerCommand.Create(rumbleProfile);
             long returned = ExecuteCommand(ref c);
@@ -205,7 +203,7 @@ namespace UnityEngine.InputSystem.Switch
         public void ReadControllerInfo()
         {
             Debug.Log("Requesting device info...");
-            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConRequestInfoSubcommand());
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchControllerRequestInfoSubcommand());
             long returned = ExecuteCommand(ref c);
             if (returned < 0)
             {
@@ -216,15 +214,15 @@ namespace UnityEngine.InputSystem.Switch
         public void DoBluetoothPairing()
         {
             // step 1
-            var s1 = new SwitchJoyConBluetoothManualPairingSubcommand();
+            var s1 = new SwitchControllerBluetoothManualPairingSubcommand();
             s1.ValueByte = 0x01;
             var c1 = SwitchControllerCommand.Create(subcommand: s1);
 
-            var s2 = new SwitchJoyConBluetoothManualPairingSubcommand();
+            var s2 = new SwitchControllerBluetoothManualPairingSubcommand();
             s2.ValueByte = 0x02;
             var c2 = SwitchControllerCommand.Create(subcommand: s2);
 
-            var s3 = new SwitchJoyConBluetoothManualPairingSubcommand();
+            var s3 = new SwitchControllerBluetoothManualPairingSubcommand();
             s3.ValueByte = 0x03;
             var c3 = SwitchControllerCommand.Create(subcommand: s3);
 
@@ -238,16 +236,16 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.LogError("Step 3 of bluetooth pairing failed");
         }
 
-        public void SetInputReportMode(SwitchJoyConInputMode mode)
+        public void SetInputReportMode(SwitchControllerInputModeEnum mode)
         {
-            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConInputModeSubcommand(mode));
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchControllerInputModeSubcommand(mode));
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError($"Set report mode to {mode} failed");
         }
 
         public void SetIMUEnabled(bool active)
         {
-            var s = new SwitchJoyConSetIMUEnabledSubcommand();
+            var s = new SwitchControllerSetImuEnabledSubcommand();
             s.Enabled = active;
 
             var c = SwitchControllerCommand.Create(subcommand: s);
@@ -257,7 +255,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void SetVibrationEnabled(bool active)
         {
-            var s = new SwitchJoyConSetVibrationEnabledSubcommand();
+            var s = new SwitchControllerSetVibrationEnabledSubcommand();
             s.Enabled = active;
 
             var c = SwitchControllerCommand.Create(subcommand: s);
@@ -266,12 +264,12 @@ namespace UnityEngine.InputSystem.Switch
         }
 
         public void SetLEDs(
-            SwitchJoyConLEDStatus p1 = SwitchJoyConLEDStatus.Off,
-            SwitchJoyConLEDStatus p2 = SwitchJoyConLEDStatus.Off,
-            SwitchJoyConLEDStatus p3 = SwitchJoyConLEDStatus.Off,
-            SwitchJoyConLEDStatus p4 = SwitchJoyConLEDStatus.Off)
+            SwitchControllerLEDStatusEnum p1 = SwitchControllerLEDStatusEnum.Off,
+            SwitchControllerLEDStatusEnum p2 = SwitchControllerLEDStatusEnum.Off,
+            SwitchControllerLEDStatusEnum p3 = SwitchControllerLEDStatusEnum.Off,
+            SwitchControllerLEDStatusEnum p4 = SwitchControllerLEDStatusEnum.Off)
         {
-            var c = SwitchControllerCommand.Create(subcommand: new SwitchJoyConLEDSubcommand(p1, p2, p3, p4));
+            var c = SwitchControllerCommand.Create(subcommand: new SwitchControllerSetLEDSubcommand(p1, p2, p3, p4));
 
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Set LEDs failed");
@@ -279,7 +277,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadIMUCalibrationData()
         {
-            var readSubcommand = new ReadSPIFlash(atAddress: 0x6020, withLength: 0x1D);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6020, withLength: 0x1D);
             Debug.Log($"Requesting IMU calibration info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -288,7 +286,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadColors()
         {
-            var readSubcommand = new ReadSPIFlash(atAddress: 0x6050, withLength: 0x2F);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6050, withLength: 0x2F);
             Debug.Log($"Requesting color info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -399,7 +397,7 @@ namespace UnityEngine.InputSystem.Switch
             // Simple report mode!
             if (genericReport->reportId == 0x3f)
             {
-                SetInputReportMode(SwitchJoyConInputMode.Standard);
+                SetInputReportMode(SwitchControllerInputModeEnum.Standard);
                 return false;
             }
 
@@ -434,7 +432,7 @@ namespace UnityEngine.InputSystem.Switch
             ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
             IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
 
-            SwitchJoyConSubcommandID subcommandReplyId = (SwitchJoyConSubcommandID)response.subcommandId;
+            SwitchControllerSubcommandIDEnum subcommandReplyId = (SwitchControllerSubcommandIDEnum)response.subcommandId;
             var subcommandWasAcknowledged = (response.ack & 0x80) != 0;
 
             Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
@@ -443,10 +441,10 @@ namespace UnityEngine.InputSystem.Switch
             {
                 switch (subcommandReplyId)
                 {
-                    case SwitchJoyConSubcommandID.RequestDeviceInfo:
+                    case SwitchControllerSubcommandIDEnum.RequestDeviceInfo:
                         HandleDeviceInfo(response.replyData);
                         break;
-                    case SwitchJoyConSubcommandID.SPIFlashRead:
+                    case SwitchControllerSubcommandIDEnum.SPIFlashRead:
                         HandleFlashRead(response.replyData);
                         break;
                     default:

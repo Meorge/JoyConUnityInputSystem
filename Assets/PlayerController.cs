@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
     {
         while (true)
         {
-            SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+            SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
             {
                 highBandFrequencyL = 160,
                 highBandAmplitudeL = amp,
@@ -81,7 +81,7 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator QuickRumble()
     {
-        SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+        SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
         {
             lowBandFrequencyL = 0,
             lowBandAmplitudeL = 0,
@@ -93,7 +93,7 @@ public class PlayerController : MonoBehaviour
             highBandAmplitudeR = 1
         });
         yield return new WaitForSeconds(0.1f);
-        SwitchControllerHID.current.Rumble(new SwitchJoyConRumbleProfile
+        SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
         {
             lowBandFrequencyL = 0,
             lowBandAmplitudeL = 0,

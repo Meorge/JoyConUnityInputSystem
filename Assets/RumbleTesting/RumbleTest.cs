@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Switch;
 
 public class RumbleTest : MonoBehaviour
 {
-    [SerializeField] private SwitchJoyConRumbleProfile m_profile = SwitchJoyConRumbleProfile.CreateEmpty();
+    [SerializeField] private SwitchControllerRumbleProfile m_profile = SwitchControllerRumbleProfile.CreateEmpty();
 
     [SerializeField] private Slider m_hfFreq = null;
     [SerializeField] private Slider m_hfAmp = null;
@@ -120,20 +120,20 @@ public class RumbleTest : MonoBehaviour
         yield return StartCoroutine(PlayNote(c));
     }
 
-    SwitchJoyConRumbleProfile MusicalNote(float note)
+    SwitchControllerRumbleProfile MusicalNote(float note)
     {
-        var a = SwitchJoyConRumbleProfile.CreateEmpty();
+        var a = SwitchControllerRumbleProfile.CreateEmpty();
         a.highBandAmplitudeR = 1;
         a.highBandFrequencyR = note;
         return a;
     }
 
-    IEnumerator PlayNote(SwitchJoyConRumbleProfile p)
+    IEnumerator PlayNote(SwitchControllerRumbleProfile p)
     {
         jc.Rumble(p);
         yield return new WaitForSeconds(0.3f);
 
-        jc.Rumble(SwitchJoyConRumbleProfile.CreateNeutral());
+        jc.Rumble(SwitchControllerRumbleProfile.CreateNeutral());
         yield return new WaitForSeconds(0.05f);
     }
 
