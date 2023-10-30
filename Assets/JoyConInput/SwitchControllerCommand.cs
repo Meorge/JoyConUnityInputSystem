@@ -37,6 +37,7 @@ namespace UnityEngine.InputSystem.Switch
         
         public static SwitchControllerCommand Create(SwitchControllerRumbleProfile? rumbleProfile = null, SwitchControllerBaseSubcommand subcommand = null)
         {
+            Debug.Log("Create called");
             SwitchControllerDualRumbleData rumbleData;
             if (rumbleProfile != null)
                 rumbleData = new SwitchControllerDualRumbleData
@@ -68,10 +69,11 @@ namespace UnityEngine.InputSystem.Switch
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
                 first = 0x01,
-                globalCount = globalNumber++,
+                globalCount = globalNumber,
                 rumbleData = rumbleData,
                 subcommand = subcommand.GetSubcommand()
             };
+            globalNumber+=1;
             return command;
         }
     }
