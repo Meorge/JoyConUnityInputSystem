@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Switch
         public FourCC typeStatic => Type;
     
         internal const int id = 0;
-        internal const int kSize = InputDeviceCommand.BaseCommandSize + 0x40;
+        internal const int kSize = InputDeviceCommand.BaseCommandSize + 49;
     
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -37,7 +37,6 @@ namespace UnityEngine.InputSystem.Switch
         
         public static SwitchControllerCommand Create(SwitchControllerRumbleProfile? rumbleProfile = null, SwitchControllerBaseSubcommand subcommand = null)
         {
-            Debug.Log("Create called");
             SwitchControllerDualRumbleData rumbleData;
             if (rumbleProfile != null)
                 rumbleData = new SwitchControllerDualRumbleData

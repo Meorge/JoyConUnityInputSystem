@@ -214,6 +214,7 @@ namespace UnityEngine.InputSystem.Switch
         public void DoBluetoothPairing()
         {
             // step 1
+            // TODO: This step should send the bluetooth address of the host as the second argument
             var s1 = new SwitchControllerBluetoothManualPairingSubcommand();
             s1.ValueByte = 0x01;
             var c1 = SwitchControllerCommand.Create(subcommand: s1);
@@ -230,6 +231,7 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.LogError("Step 1 of bluetooth pairing failed");
 
             if (ExecuteCommand(ref c2) < 0)
+                //! Fails here (see TODO above)
                 Debug.LogError("Step 2 of bluetooth pairing failed");
 
             if (ExecuteCommand(ref c3) < 0)
