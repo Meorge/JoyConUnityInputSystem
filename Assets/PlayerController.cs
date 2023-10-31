@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Switch;
 
+using System.Net.NetworkInformation;
+using System;
+
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] PlayerInput pInput = null;
@@ -19,7 +22,33 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        // StartCoroutine(RumbleCoroutine());
+
+        if (SwitchControllerHID.current != null)
+        {
+            SwitchControllerHID.current.SetVibrationEnabled(true);
+            StartCoroutine(RumbleCoroutine());
+
+            SwitchControllerHID.current.SetLEDs(
+                p1: SwitchControllerLEDStatusEnum.Flashing,
+                p2: SwitchControllerLEDStatusEnum.On,
+                p3: SwitchControllerLEDStatusEnum.Off,
+                p4: SwitchControllerLEDStatusEnum.On
+            );
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (SwitchControllerHID.current != null)
+        {
+
+            SwitchControllerHID.current.SetLEDs(
+                p1: SwitchControllerLEDStatusEnum.On,
+                p2: SwitchControllerLEDStatusEnum.Off,
+                p3: SwitchControllerLEDStatusEnum.Off,
+                p4: SwitchControllerLEDStatusEnum.Off
+            );
+        }
     }
 
     // Update is called once per frame
@@ -27,7 +56,7 @@ public class PlayerController : MonoBehaviour
     {
         transform.Translate(new Vector3(m_movement.x, 0, m_movement.y));
         // rb.AddForce(new Vector3(m_movement.x, 0, m_movement.y));
-        amp = (Mathf.Sin(Time.time) + 1) / 2;
+        amp = Mathf.Clamp((Mathf.Sin(Time.time) + 1) / 2, 0f, 1f);
         ampOffset = (Mathf.Sin(Time.time + Mathf.PI) + 1) / 2;
     }
 
@@ -48,7 +77,7 @@ public class PlayerController : MonoBehaviour
                 highBandAmplitudeR = 0,
                 
                 lowBandFrequencyR = 160,
-                lowBandAmplitudeR = 0//amp * 0.1f
+                lowBandAmplitudeR = amp * 0.1f
             });
             yield return new WaitForSeconds(1f);
         }
