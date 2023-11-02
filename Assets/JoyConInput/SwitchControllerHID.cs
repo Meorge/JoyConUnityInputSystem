@@ -214,6 +214,7 @@ namespace UnityEngine.InputSystem.Switch
         public void DoBluetoothPairing()
         {
             // step 1
+            // TODO: This step should send the bluetooth address of the host as the second argument
             var s1 = new SwitchControllerBluetoothManualPairingSubcommand();
             s1.ValueByte = 0x01;
             var c1 = SwitchControllerCommand.Create(subcommand: s1);
@@ -230,6 +231,7 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.LogError("Step 1 of bluetooth pairing failed");
 
             if (ExecuteCommand(ref c2) < 0)
+                //! Fails here (see TODO above)
                 Debug.LogError("Step 2 of bluetooth pairing failed");
 
             if (ExecuteCommand(ref c3) < 0)
@@ -277,7 +279,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadIMUCalibrationData()
         {
-            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6020, withLength: 0x1D);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6020, withLength: 0x18);
             Debug.Log($"Requesting IMU calibration info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -286,7 +288,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadColors()
         {
-            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6050, withLength: 0x2F);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6050, withLength: 0x0B);
             Debug.Log($"Requesting color info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -395,29 +397,42 @@ namespace UnityEngine.InputSystem.Switch
             var genericReport = (SwitchControllerGenericInputReport*)stateEvent->state;
 
             // Simple report mode!
-            if (genericReport->reportId == 0x3f)
+            if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.Simple)
             {
+                Debug.Log("PreProcessEvent: Simple report mode");
                 SetInputReportMode(SwitchControllerInputModeEnum.Standard);
                 return false;
             }
 
             // Subcommand reply!
-            else if (genericReport->reportId == 0x21)
+            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.ReadSubcommands)
             {
+                Debug.Log("PreProcessEvent: Subcommand report mode");
                 var data = ((SwitchControllerSubcommandResponseInputReport*)stateEvent->state);
                 HandleSubcommand(*data);
                 return true;
             }
 
             // Full report mode!
-            else if (genericReport->reportId == 0x30)
+            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.Standard)
             {
+                // Debug.Log("PreProcessEvent: Standard report mode");
                 var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
 
                 m_currentOrientation += data.angularVelocity;
                 return true;
+            }
+
+            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.NFCOrIR)
+            {
+                Debug.Log("NFC or infra-red report");
+                return false;
+            }
+            else 
+            {
+                Debug.Log($"Unknown report ID: {genericReport->reportId:X2}");
             }
             return false;
         }
@@ -456,7 +471,8 @@ namespace UnityEngine.InputSystem.Switch
         [StructLayout(LayoutKind.Sequential)]
         private unsafe struct DeviceInfo
         {
-            public ushort firmwareVersion;
+            public byte firmwareVersionMaj;
+            public byte firmwareVersionMin;
             public byte joyConType;
             public byte unknown1;
             public fixed byte macAddress[6];
@@ -469,7 +485,7 @@ namespace UnityEngine.InputSystem.Switch
             DeviceInfo deviceInfo = (DeviceInfo)Marshal.PtrToStructure((IntPtr)dataPtr, typeof(DeviceInfo));
             SpecificControllerType = (SpecificControllerTypeEnum)deviceInfo.joyConType;
 
-            Debug.Log($"Firmware version is: {deviceInfo.firmwareVersion}, Joy-Con type is {SpecificControllerType}");
+            Debug.Log($"Firmware version is: {deviceInfo.firmwareVersionMaj:X1}.{deviceInfo.firmwareVersionMin:X2}, Joy-Con type is {SpecificControllerType}");
             m_deviceInfoLoaded = true;
         }
 
@@ -512,16 +528,22 @@ namespace UnityEngine.InputSystem.Switch
 
             byte* response = dataPtr + 5;
 
-            // Serial number
-            if (address == 0x6000 && length == 0x10)
+            // Shipment data, unsure
+            if (address == 0x5000 && length == 0x01)
+            {
+                Debug.Log("Read shipment data... (not implemented)");
+            }
+
+            // Serial number in NON-extended ASCII
+            else if (address == 0x6000 && length == 0x10)
             {
                 Debug.Log("Read serial number... (not implemented)");
             } 
 
             // IMU factory calibration
-            else if (address == 0x6020 && length == 0x1D)
+            else if (address == 0x6020 && length == 0x18)
             {
-                Debug.Log($"Read IMU calibration data...");
+                Debug.Log($"Read factory IMU calibration data...");
                 DecodeIMUCalibrationData((ushort*)response);
             }
 
@@ -531,11 +553,12 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.Log("Read factory analog stick calibration data...");
                 DecodeStickCalibrationData(response);
             }
-                
-            // User analog stick calibration
-            else if (address == 0x8010 && length == 0x16)
+
+            // Colors
+            else if (address == 0x6050 && length == 0x0B)
             {
-                Debug.Log("Read user analog stick calibration data... (not implemented)");
+                Debug.Log("Read controller color data...");
+                DecodeColorData(response);
             }
 
             // Stick device parameters 1
@@ -549,23 +572,23 @@ namespace UnityEngine.InputSystem.Switch
             {
                 Debug.Log("Read stick device params 2 data... (not implemented)");
             }
-
-            // Shipment?
-            else if (address == 0x5000 && length == 0x01)
+                
+            // User analog stick calibration
+            else if (address == 0x8010 && length == 0x16)
             {
-                Debug.Log("Read shipment data... (not implemented)");
+                Debug.Log("Read user analog stick calibration data... (not implemented)");
             }
 
-            // Colors
-            else if (address == 0x6050 && length == 0x2F)
+            // IMU user calibration
+            else if (address == 0x8026 && length == 0x1A)
             {
-                Debug.Log("Read controller color data...");
-                DecodeColorData(response);
+                Debug.Log($"Read user IMU calibration data...");
+                DecodeIMUCalibrationData((ushort*)response);
             }
 
             else
             {
-                Debug.Log($"Unrecognized range: 0x{address:X4}-0x{address+length:X2}");
+                Debug.Log($"Unrecognized range: 0x{address:X4}-0x{address+length:X2} (length is {length:X2})");
             }
                 
         }

@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Switch
         public FourCC typeStatic => Type;
     
         internal const int id = 0;
-        internal const int kSize = InputDeviceCommand.BaseCommandSize + 0x40;
+        internal const int kSize = InputDeviceCommand.BaseCommandSize + 49;
     
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -68,10 +68,11 @@ namespace UnityEngine.InputSystem.Switch
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
                 first = 0x01,
-                globalCount = globalNumber++,
+                globalCount = globalNumber,
                 rumbleData = rumbleData,
                 subcommand = subcommand.GetSubcommand()
             };
+            globalNumber+=1;
             return command;
         }
     }
