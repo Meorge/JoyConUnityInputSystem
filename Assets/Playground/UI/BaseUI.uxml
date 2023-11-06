@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Playground/UI/BaseUI.uss?fileID=7433441132597879392&amp;guid=d907e4703d8c9b742a353b172a970bdb&amp;type=3#BaseUI" />
+    <ui:VisualElement name="MainContainer" style="background-color: rgb(255, 255, 255); width: 100%; height: 100%;">
+        <ui:VisualElement name="DeviceDataContainer" style="flex-grow: 1; flex-direction: row; height: 15px; width: 100%;">
+            <ui:VisualElement name="MACContainer" style="flex-grow: 1; flex-direction: row; align-self: center; font-size: 21px;">
+                <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="MACLabel" />
+                <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="MACValue" />
+            </ui:VisualElement>
+            <ui:VisualElement name="FWVersionContainer" style="flex-grow: 1; justify-content: flex-start; flex-direction: row; align-items: stretch; align-self: center; font-size: 21px;">
+                <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="FWVersionLabel" />
+                <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="FWVersionValue" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="DeviceGenericContainer" style="flex-grow: 1;">
+            <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+            <ui:VisualElement style="flex-grow: 1;" />
+            <ui:VisualElement style="flex-grow: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="DeviceButtonsContainer" style="flex-grow: 1;">
+            <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="DeviceButtonsLabel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

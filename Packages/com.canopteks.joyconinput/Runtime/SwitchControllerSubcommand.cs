@@ -13,14 +13,14 @@ using System.Collections;
 
 namespace UnityEngine.InputSystem.Switch
 {
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    [StructLayout(LayoutKind.Explicit, Size = 39)]
     public unsafe struct SwitchControllerBaseSubcommandStruct
     {
         [FieldOffset(0)]
         public byte subcommandId;
 
         [FieldOffset(1)]
-        public fixed byte arguments[0x40 - 10 - 1];
+        public fixed byte arguments[38];
     }
     
     public class SwitchControllerBaseSubcommand

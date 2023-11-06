@@ -275,6 +275,8 @@ namespace UnityEngine.InputSystem.Switch
 
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Set LEDs failed");
+            else 
+                Debug.Log("LEDs set with success for " + name);
         }
 
         public void ReadIMUCalibrationData()

@@ -23,44 +23,47 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        if (SwitchControllerHID.current != null)
-        {
-            SwitchControllerHID.current.SetVibrationEnabled(true);
-            // StartCoroutine(RumbleCoroutine());
+        // Debug.Log("Is SwitchControllerHID null: " + SwitchControllerHID.current==null);
+        // if (SwitchControllerHID.current != null)
+        // {
+        //     SwitchControllerHID.current.SetVibrationEnabled(true);
+        //     // StartCoroutine(RumbleCoroutine());
 
-            SwitchJoyConRHID.current?.SetLEDs(
-                p1: SwitchControllerLEDStatusEnum.Flashing,
-                p2: SwitchControllerLEDStatusEnum.On,
-                p3: SwitchControllerLEDStatusEnum.Off,
-                p4: SwitchControllerLEDStatusEnum.On
-            );
-            // SwitchJoyConLHID.current?.SetLEDs(
-            //     p1: SwitchControllerLEDStatusEnum.Flashing,
-            //     p2: SwitchControllerLEDStatusEnum.On,
-            //     p3: SwitchControllerLEDStatusEnum.Off,
-            //     p4: SwitchControllerLEDStatusEnum.On
-            // );
-        }
+        //     SwitchControllerHID.current.SetLEDs(
+        //         p1: SwitchControllerLEDStatusEnum.Flashing,
+        //         p2: SwitchControllerLEDStatusEnum.On,
+        //         p3: SwitchControllerLEDStatusEnum.Off,
+        //         p4: SwitchControllerLEDStatusEnum.On
+        //     );
+        //     // SwitchJoyConLHID.current?.SetLEDs(
+        //     //     p1: SwitchControllerLEDStatusEnum.Flashing,
+        //     //     p2: SwitchControllerLEDStatusEnum.On,
+        //     //     p3: SwitchControllerLEDStatusEnum.Off,
+        //     //     p4: SwitchControllerLEDStatusEnum.On
+        //     // );
+        // }
     }
 
     private void OnApplicationQuit()
     {
-        if (SwitchControllerHID.current != null)
-        {
+        // Debug.Log("Is SwitchControllerHID null: " + SwitchControllerHID.current);
+        // if (SwitchControllerHID.current != null)
+        // {
+        //     SwitchControllerHID.current.SetVibrationEnabled(false);
 
-            SwitchJoyConRHID.current?.SetLEDs(
-                p1: SwitchControllerLEDStatusEnum.On,
-                p2: SwitchControllerLEDStatusEnum.Off,
-                p3: SwitchControllerLEDStatusEnum.Off,
-                p4: SwitchControllerLEDStatusEnum.Off
-            );
-            // SwitchJoyConLHID.current?.SetLEDs(
-            //     p1: SwitchControllerLEDStatusEnum.On,
-            //     p2: SwitchControllerLEDStatusEnum.Off,
-            //     p3: SwitchControllerLEDStatusEnum.Off,
-            //     p4: SwitchControllerLEDStatusEnum.Off
-            // );
-        }
+        //     SwitchControllerHID.current.SetLEDs(
+        //         p1: SwitchControllerLEDStatusEnum.On,
+        //         p2: SwitchControllerLEDStatusEnum.Off,
+        //         p3: SwitchControllerLEDStatusEnum.Off,
+        //         p4: SwitchControllerLEDStatusEnum.Off
+        //     );
+        //     // SwitchJoyConLHID.current?.SetLEDs(
+        //     //     p1: SwitchControllerLEDStatusEnum.On,
+        //     //     p2: SwitchControllerLEDStatusEnum.Off,
+        //     //     p3: SwitchControllerLEDStatusEnum.Off,
+        //     //     p4: SwitchControllerLEDStatusEnum.Off
+        //     // );
+        // }
     }
 
     // Update is called once per frame
