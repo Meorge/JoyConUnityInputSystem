@@ -79,8 +79,8 @@ namespace UnityEngine.InputSystem.Switch
         public SpecificControllerTypeEnum SpecificControllerType { get; protected set; } = SpecificControllerTypeEnum.Unknown;
         public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
 
-        private bool m_config1DataLoaded = false;
-        private bool m_config2DataLoaded = false;
+        private bool m_IMUConfigDataLoaded = false;
+        private bool m_stickConfigDataLoaded = false;
 
 
         private const int configTimerDataDefault = 500;
@@ -104,6 +104,7 @@ namespace UnityEngine.InputSystem.Switch
 
             m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
             m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+            m_stickCalibrationTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
         }
 
         public unsafe void OnStateEvent(InputEventPtr eventPtr)
@@ -129,6 +130,10 @@ namespace UnityEngine.InputSystem.Switch
             {
                 UpdateDeviceInfo();
                 return;
+            }
+            if(!m_stickConfigDataLoaded)
+            {
+                UpdateStickCalibrationData();
             }
         }
 
@@ -158,6 +163,18 @@ namespace UnityEngine.InputSystem.Switch
             {
                 m_infoTimeOfLastRequest = currentTime;
                 ReadControllerInfo();
+            }
+        }
+
+        private double m_stickCalibrationTimeOfLastRequest;
+        private void UpdateStickCalibrationData()
+        {
+            var currentTime = InputRuntime.s_Instance.currentTime;
+
+            if (currentTime > m_stickCalibrationTimeOfLastRequest + timeout)
+            {
+                m_stickCalibrationTimeOfLastRequest = currentTime;
+                ReadStickCalibrationData();
             }
         }
 
@@ -295,6 +312,15 @@ namespace UnityEngine.InputSystem.Switch
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Read color info failed");
+        }
+
+        public void ReadStickCalibrationData()
+        {
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x603D, withLength: 0x12);
+            Debug.Log($"Requesting factory stick calibration info...");
+            var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
+            if (ExecuteCommand(ref c) < 0)
+                Debug.LogError("Read factory stick calibration info failed");
         }
 
         private string ThingToHexString<T>(T command)
@@ -707,6 +733,11 @@ namespace UnityEngine.InputSystem.Switch
             Debug.Log($"Colors loaded: {BodyColor}, {ButtonColor}");
         }
 
+        /// <summary>
+        /// Decode the calibration part of the packet into human readable values.
+        /// </summary>
+        /// <param name="stickCal">Array of 9 bytes.</param>
+        /// <returns>Array of 6 ushort values meaning different wether it is for left or right stick (see <see cref="DecodeLeftStickData"/> and <see cref="DecodeRightStickData"/> </returns>
         private unsafe ushort[] DecodeStickData(byte* stickCal)
         {
             // yoinked from
@@ -721,30 +752,36 @@ namespace UnityEngine.InputSystem.Switch
             return data;
         }
 
+        /// <summary>
+        /// Decode the calibration part of the packet for the left stick.
+        /// </summary>
+        /// <param name="lStickCal">Array of 9 bytes.</param>
         private unsafe void DecodeLeftStickData(byte* lStickCal)
         {
             ushort[] decoded = DecodeStickData(lStickCal);
 
-            var xAxisMaxAboveCenter = decoded[0];
-            var yAxisMaxAboveCenter = decoded[1];
-            var xAxisCenter = decoded[2];
-            var yAxisCenter = decoded[3];
-            var xAxisMinBelowCenter = decoded[4];
-            var yAxisMinBelowCenter = decoded[5];
+            ushort xAxisMaxAboveCenter = decoded[0];
+            ushort yAxisMaxAboveCenter = decoded[1];
+            ushort xAxisCenter = decoded[2];
+            ushort yAxisCenter = decoded[3];
+            ushort xAxisMinBelowCenter = decoded[4];
+            ushort yAxisMinBelowCenter = decoded[5];
 
 
-            var lStickXMin = xAxisCenter - xAxisMinBelowCenter;
-            var lStickXMax = xAxisCenter + xAxisMaxAboveCenter;
+            ushort lStickXMin = (ushort)(xAxisCenter - xAxisMinBelowCenter);
+            ushort lStickXMax = (ushort)(xAxisCenter + xAxisMaxAboveCenter);
 
-            var lStickYMin = yAxisCenter - yAxisMinBelowCenter;
-            var lStickYMax = yAxisCenter + yAxisMaxAboveCenter;
+            ushort lStickYMin = (ushort)(yAxisCenter - yAxisMinBelowCenter);
+            ushort lStickYMax = (ushort)(yAxisCenter + yAxisMaxAboveCenter);
 
             calibrationData.lStickCalibData = new StickCalibrationData()
             {
                 xMin = lStickXMin,
                 xMax = lStickXMax,
                 yMin = lStickYMin,
-                yMax = lStickYMax
+                yMax = lStickYMax,
+                xCenter = xAxisCenter,
+                yCenter = yAxisCenter
             };
         }
 
@@ -752,41 +789,43 @@ namespace UnityEngine.InputSystem.Switch
         {
             ushort[] decoded = DecodeStickData(rStickCal);
 
-            var xAxisCenter = decoded[0];
-            var yAxisCenter = decoded[1];
-            var xAxisMinBelowCenter = decoded[2];
-            var yAxisMinBelowCenter = decoded[3];
-            var xAxisMaxAboveCenter = decoded[4];
-            var yAxisMaxAboveCenter = decoded[5];
+            ushort xAxisCenter = decoded[0];
+            ushort yAxisCenter = decoded[1];
+            ushort xAxisMinBelowCenter = decoded[2];
+            ushort yAxisMinBelowCenter = decoded[3];
+            ushort xAxisMaxAboveCenter = decoded[4];
+            ushort yAxisMaxAboveCenter = decoded[5];
 
-            var rStickXMin = xAxisCenter - xAxisMinBelowCenter;
-            var rStickXMax = xAxisCenter + xAxisMaxAboveCenter;
+            ushort rStickXMin = (ushort)(xAxisCenter - xAxisMinBelowCenter);
+            ushort rStickXMax = (ushort)(xAxisCenter + xAxisMaxAboveCenter);
 
-            var rStickYMin = yAxisCenter - yAxisMinBelowCenter;
-            var rStickYMax = yAxisCenter + yAxisMaxAboveCenter;
+            ushort rStickYMin = (ushort)(yAxisCenter - yAxisMinBelowCenter);
+            ushort rStickYMax = (ushort)(yAxisCenter + yAxisMaxAboveCenter);
 
             calibrationData.rStickCalibData = new StickCalibrationData()
             {
                 xMin = rStickXMin,
                 xMax = rStickXMax,
                 yMin = rStickYMin,
-                yMax = rStickYMax
+                yMax = rStickYMax,
+                xCenter = xAxisCenter,
+                yCenter = yAxisCenter
             };
-
-            Debug.Log("right stick data calib received");
         }
 
         public struct StickCalibrationData
         {
-            public int xMin;
-            public int xMax;
+            public ushort xMin;
+            public ushort xMax;
 
-            public int yMin;
-            public int yMax;
+            public ushort yMin;
+            public ushort yMax;
+            public ushort xCenter;
+            public ushort yCenter;
 
             public static StickCalibrationData CreateEmpty()
             {
-                return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0 };
+                return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0, xCenter = 0, yCenter = 0 };
             }
         }
     }
