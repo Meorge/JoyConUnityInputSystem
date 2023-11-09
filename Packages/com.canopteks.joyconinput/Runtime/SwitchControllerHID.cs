@@ -16,9 +16,11 @@ namespace UnityEngine.InputSystem.Switch
 #endif
     public abstract class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
     {
+        #region Accelerometer/gyroscope
         public Vector3Control angularVelocity { get; private set; }
         public Vector3Control orientation { get; private set; }
         public Vector3Control acceleration { get; private set; }
+        #endregion
 
         public DpadControl dpad { get; private set; }
 
@@ -49,14 +51,14 @@ namespace UnityEngine.InputSystem.Switch
 
         private Vector3 m_currentOrientation = new Vector3();
 
-        internal struct CalibrationData
+        public struct CalibrationData
         {
             public StickCalibrationData lStickCalibData;
             public StickCalibrationData rStickCalibData;
             public IMUCalibrationData imuCalibData;
         }
 
-        internal CalibrationData calibrationData = new CalibrationData() {
+        public CalibrationData calibrationData = new CalibrationData() {
             lStickCalibData = new StickCalibrationData()
             {
                 xMin = 720,
@@ -78,6 +80,8 @@ namespace UnityEngine.InputSystem.Switch
         public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
         public SpecificControllerTypeEnum SpecificControllerType { get; protected set; } = SpecificControllerTypeEnum.Unknown;
         public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
+        public string FirmwareVersion { get; protected set; } = "X.X";
+        public string MACAddress { get; protected set; } = "XX.XX.XX.XX.XX.XX";
 
         private bool m_IMUConfigDataLoaded = false;
         private bool m_stickConfigDataLoaded = false;
@@ -511,9 +515,12 @@ namespace UnityEngine.InputSystem.Switch
         private unsafe void HandleDeviceInfo(byte* dataPtr)
         {
             DeviceInfo deviceInfo = (DeviceInfo)Marshal.PtrToStructure((IntPtr)dataPtr, typeof(DeviceInfo));
-            SpecificControllerType = (SpecificControllerTypeEnum)deviceInfo.joyConType;
 
-            Debug.Log($"Firmware version is: {deviceInfo.firmwareVersionMaj:X1}.{deviceInfo.firmwareVersionMin:X2}, Joy-Con type is {SpecificControllerType}");
+            SpecificControllerType = (SpecificControllerTypeEnum)deviceInfo.joyConType;
+            FirmwareVersion = String.Format($"{deviceInfo.firmwareVersionMaj:X1}.{deviceInfo.firmwareVersionMin:X2}");
+            MACAddress = String.Format($"{deviceInfo.macAddress[0]:X2}:{deviceInfo.macAddress[1]:X2}:{deviceInfo.macAddress[2]:X2}:{deviceInfo.macAddress[3]:X2}:{deviceInfo.macAddress[4]:X2}:{deviceInfo.macAddress[5]:X2}");
+
+            Debug.Log($"Firmware version is: {FirmwareVersion}, Joy-Con type is {SpecificControllerType}");
             m_deviceInfoLoaded = true;
         }
 
@@ -718,7 +725,10 @@ namespace UnityEngine.InputSystem.Switch
         private unsafe void DecodeStickCalibrationData(byte* response)
         {
             DecodeLeftStickData(response);
-            DecodeRightStickData(response + 9);       
+            DecodeRightStickData(response + 9);  
+
+            Debug.Log($"Calibration data loaded");   
+            m_stickConfigDataLoaded = true;  
         }
 
         private unsafe void DecodeColorData(byte* response)
@@ -826,6 +836,11 @@ namespace UnityEngine.InputSystem.Switch
             public static StickCalibrationData CreateEmpty()
             {
                 return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0, xCenter = 0, yCenter = 0 };
+            }
+
+            public override string ToString()
+            {
+                return String.Format($"Center: ({xCenter:X2};{yCenter:X2}), X range: [{xMin:X2}-{xMax:X2}], Y range: [{yMin:X2}-{yMax:X2}]");
             }
         }
     }

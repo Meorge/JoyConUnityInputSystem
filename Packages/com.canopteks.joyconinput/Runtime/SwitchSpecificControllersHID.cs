@@ -24,6 +24,26 @@ namespace UnityEngine.InputSystem.Switch
         
         [RuntimeInitializeOnLoadMethod]
         static void Init() { }
+
+        /// <summary>
+        /// The last used/added Joy-Con (R) controller.
+        /// </summary>
+        public static new SwitchJoyConLHID current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
     
     
@@ -48,6 +68,26 @@ namespace UnityEngine.InputSystem.Switch
         
         [RuntimeInitializeOnLoadMethod]
         static void Init() { }
+
+        /// <summary>
+        /// The last used/added Joy-Con (R) controller.
+        /// </summary>
+        public static new SwitchJoyConRHID current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+        
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
     
     [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState), displayName = "Pro Controller")]
@@ -70,5 +110,25 @@ namespace UnityEngine.InputSystem.Switch
         
         [RuntimeInitializeOnLoadMethod]
         static void Init() { }
+
+        /// <summary>
+        /// The last used/added Joy-Con (R) controller.
+        /// </summary>
+        public static new SwitchProControllerNewHID current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+        
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
 }
