@@ -43,12 +43,12 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, SwitchControllerHID.SpecificControllerTypeEnum controllerType, Vector3 currentOrientation)
+        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, SpecificControllerTypeEnum controllerType, Vector3 currentOrientation)
         {
             var leftStickVec = Vector2.zero;
             var rightStickVec = Vector2.zero;
-            if (controllerType == SwitchControllerHID.SpecificControllerTypeEnum.LeftJoyCon ||
-                controllerType == SwitchControllerHID.SpecificControllerTypeEnum.ProController)
+            if (controllerType == SpecificControllerTypeEnum.LeftJoyCon ||
+                controllerType == SpecificControllerTypeEnum.ProController)
             {
                 // Left analog stick data
                 var lStickCalibData = calibData.lStickCalibData;
@@ -65,8 +65,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
                 // Debug.Log($"Left stick data: Raw: ({rawLeftStickHoriz:X3};{rawLeftStickVert:X3}) Calibration data: Center=({lStickCalibData.xCenter:X3},{lStickCalibData.yCenter:X3}); X=[{lStickCalibData.xMin:X3} - {lStickCalibData.xMax:X3}]; Y=[{lStickCalibData.yMin:X3} - {lStickCalibData.yMax:X3}]   Final data: {leftStickVec}");
             }
 
-            if (controllerType == SwitchControllerHID.SpecificControllerTypeEnum.RightJoyCon ||
-                controllerType == SwitchControllerHID.SpecificControllerTypeEnum.ProController)
+            if (controllerType == SpecificControllerTypeEnum.RightJoyCon ||
+                controllerType == SpecificControllerTypeEnum.ProController)
             {
                 // Right analog stick data
                 var rStickCalibData = calibData.rStickCalibData;

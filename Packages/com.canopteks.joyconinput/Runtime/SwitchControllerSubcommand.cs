@@ -13,6 +13,15 @@ using System.Collections;
 
 namespace UnityEngine.InputSystem.Switch
 {
+    //* For more clarity, read this first: https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/bluetooth_hid_notes.md
+
+    #region Base data types
+    /// <summary>
+    /// Contiguous data structure that will be sent to the controller through 0x01 output report.
+    /// </summary>
+    /// <remarks>
+    /// It will be filled with different stuff or different sizes based on the subcommand used.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = 39)]
     public unsafe struct SwitchControllerBaseSubcommandStruct
     {
@@ -22,7 +31,10 @@ namespace UnityEngine.InputSystem.Switch
         [FieldOffset(1)]
         public fixed byte arguments[38];
     }
-    
+
+    /// <summary>
+    /// Wrapper class to formulate this mumbo-jumbo more easily through C#/Unity. See <see cref="SwitchControllerBaseSubcommandStruct"/>
+    /// </summary>        
     public class SwitchControllerBaseSubcommand
     {
         public virtual byte SubcommandID { get; }
@@ -44,20 +56,22 @@ namespace UnityEngine.InputSystem.Switch
 
         protected virtual byte[] GetArguments() => new byte[0x1] { 0x00 };
     }
-    
+    #endregion
+
+    #region Subcommand variants
     public class SwitchControllerEmptySubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.GetOnlyControllerState;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.GetOnlyControllerState;
     }
     
     public class SwitchControllerRequestInfoSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.RequestDeviceInfo;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.RequestDeviceInfo;
     }
     
     public class SwitchControllerBluetoothManualPairingSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.BluetoothManualPairing;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.BluetoothManualPairing;
 
         public byte ValueByte = 0x01;
         protected override byte[] GetArguments() => new byte[0x1] { ValueByte };
@@ -65,7 +79,7 @@ namespace UnityEngine.InputSystem.Switch
     
     public class SwitchControllerSetImuEnabledSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.EnableDisableIMU;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.EnableDisableIMU;
 
         public bool Enabled = true;
         protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
@@ -73,7 +87,7 @@ namespace UnityEngine.InputSystem.Switch
     
     public class SwitchControllerSetVibrationEnabledSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.EnableDisableVibration;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.EnableDisableVibration;
 
         public bool Enabled = true;
         protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
@@ -81,7 +95,7 @@ namespace UnityEngine.InputSystem.Switch
     
     public class SwitchControllerReadSPIFlashSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.SPIFlashRead;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.SPIFlashRead;
 
         public uint Address = 0x0;
         public byte Length = 0x0;
@@ -106,18 +120,18 @@ namespace UnityEngine.InputSystem.Switch
     
     public class SwitchControllerSetLEDSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte)SwitchControllerSubcommandIDEnum.SetPlayerLights;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.SetPlayerLights;
 
-        public SwitchControllerLEDStatusEnum Player1LED = SwitchControllerLEDStatusEnum.Off;
-        public SwitchControllerLEDStatusEnum Player2LED = SwitchControllerLEDStatusEnum.Off;
-        public SwitchControllerLEDStatusEnum Player3LED = SwitchControllerLEDStatusEnum.Off;
-        public SwitchControllerLEDStatusEnum Player4LED = SwitchControllerLEDStatusEnum.Off;
+        public LEDStatusEnum Player1LED = LEDStatusEnum.Off;
+        public LEDStatusEnum Player2LED = LEDStatusEnum.Off;
+        public LEDStatusEnum Player3LED = LEDStatusEnum.Off;
+        public LEDStatusEnum Player4LED = LEDStatusEnum.Off;
 
         public SwitchControllerSetLEDSubcommand(
-            SwitchControllerLEDStatusEnum p1 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p2 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p3 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p4 = SwitchControllerLEDStatusEnum.Off)
+            LEDStatusEnum p1 = LEDStatusEnum.Off,
+            LEDStatusEnum p2 = LEDStatusEnum.Off,
+            LEDStatusEnum p3 = LEDStatusEnum.Off,
+            LEDStatusEnum p4 = LEDStatusEnum.Off)
         {
             Player1LED = p1;
             Player2LED = p2;
@@ -131,66 +145,17 @@ namespace UnityEngine.InputSystem.Switch
         }
     }
 
-    public enum SwitchControllerLEDStatusEnum {
-        Off = 0,
-        On = 0b0000_0001,
-        Flashing = 0b0001_0000
-    }
-    
-    public enum SwitchControllerInputModeEnum
-    {
-        Standard = 0x30,
-        NFCOrIR = 0x31,
-        ReadSubcommands = 0x21,
-        Simple = 0x3F
-    }
-
     public class SwitchControllerInputModeSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte) SwitchControllerSubcommandIDEnum.SetInputReportMode;
-        public SwitchControllerInputModeEnum InputMode = SwitchControllerInputModeEnum.Standard;
+        public override byte SubcommandID => (byte) SubcommandIDEnum.SetInputReportMode;
+        public InputModeEnum InputMode = InputModeEnum.Standard;
 
         protected override byte[] GetArguments() => new byte[1] {(byte) InputMode};
 
-        public SwitchControllerInputModeSubcommand(SwitchControllerInputModeEnum mode)
+        public SwitchControllerInputModeSubcommand(InputModeEnum mode)
         {
             InputMode = mode;
         }
     }
-    
-    public enum SwitchControllerSubcommandIDEnum : byte
-    {
-        GetOnlyControllerState = 0x00,
-        BluetoothManualPairing = 0x01,
-        RequestDeviceInfo = 0x02,
-        SetInputReportMode = 0x03,
-        TriggerButtonsElapsedTime = 0x04,
-        GetPageListState = 0x05,
-        SetHCIState = 0x06,
-        ResetPairingInfo = 0x07,
-        SetShipmentLowPowerState = 0x08,
-        SPIFlashRead = 0x10,
-        SPIFlashWrite = 0x11,
-        SPISectorErase = 0x12,
-        ResetNFCAndIRMCU = 0x20,
-        SetNFCAndIRMCUConfig = 0x21,
-        SetNFCAndIRMCUState = 0x22,
-        Unknown_0x24 = 0x24,
-        Unknown_0x25 = 0x25,
-        Unknown_0x28 = 0x28,
-        Get0x28NFCAndIRMCUData = 0x29,
-        SetGPIOPinOutputValuePin2Port2 = 0x2A,
-        Get0x29NFCAndIRMCUData = 0x2B,
-        SetPlayerLights = 0x30,
-        GetPlayerLights = 0x31,
-        SetHOMELight = 0x38,
-        EnableDisableIMU = 0x40,
-        SetIMUSensitivity = 0x41,
-        WriteIMURegisters = 0x42,
-        ReadIMURegisters = 0x43,
-        EnableDisableVibration = 0x48,
-        GetRegulatedVoltage = 0x50,
-        SetGPIOPinOutputValuePins7And15Port1 = 0x51,
-        GetGPIOPinInputOutputValue = 0x52
-    }
+    #endregion
 }

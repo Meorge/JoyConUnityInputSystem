@@ -7,21 +7,23 @@ using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
+using System.Text;
 
 namespace UnityEngine.InputSystem.Switch
 {
     [InputControlLayout(stateType = typeof(SwitchControllerVirtualInputState))]
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
     [InitializeOnLoad]
-#endif
+    #endif
     public abstract class SwitchControllerHID : InputDevice, IInputStateCallbackReceiver, IEventPreProcessor
     {
-        #region Accelerometer/gyroscope
+        #region Accelerometer/gyroscope controls
         public Vector3Control angularVelocity { get; private set; }
         public Vector3Control orientation { get; private set; }
         public Vector3Control acceleration { get; private set; }
         #endregion
 
+        #region Button controls
         public DpadControl dpad { get; private set; }
 
         public ButtonControl buttonWest { get; private set; }
@@ -42,15 +44,16 @@ namespace UnityEngine.InputSystem.Switch
         
         public StickControl leftStick { get; private set; }
         public StickControl rightStick { get; private set; }
+        #endregion
 
-        private bool m_colorsLoaded = false;
+        #region Device colors
         public Color BodyColor { get; protected set; } = Color.black;
         public Color ButtonColor { get; protected set; } = Color.black;
         public Color LeftGripColor { get; protected set; } = Color.black;
         public Color RightGripColor { get; protected set; } = Color.black;
+        #endregion
 
-        private Vector3 m_currentOrientation = new Vector3();
-
+        #region Stick and IMU data
         public struct CalibrationData
         {
             public StickCalibrationData lStickCalibData;
@@ -74,7 +77,11 @@ namespace UnityEngine.InputSystem.Switch
                 yMax = 2908
             }
         };
+        #endregion
 
+        private Vector3 m_currentOrientation = new Vector3();
+
+        #region Generic data
         public BatteryLevelEnum BatteryLevel { get; protected set; } = BatteryLevelEnum.Empty;
         public bool BatteryIsCharging { get; protected set; } = false;
         public ControllerTypeEnum ControllerType { get; protected set; } = ControllerTypeEnum.JoyCon;
@@ -82,106 +89,53 @@ namespace UnityEngine.InputSystem.Switch
         public bool IsPoweredBySwitchOrUSB { get; protected set; } = false;
         public string FirmwareVersion { get; protected set; } = "X.X";
         public string MACAddress { get; protected set; } = "XX.XX.XX.XX.XX.XX";
+        public string SerialNumber { get; protected set; } = "N/A";
+        #endregion
 
+        #region Data re/loading
+        // Are the different device informations loaded ?
         private bool m_IMUConfigDataLoaded = false;
         private bool m_stickConfigDataLoaded = false;
+        private bool m_deviceInfoLoaded = false;
+        private bool m_colorsLoaded = false;
 
+        // Register the time of last request to retry to fetch them in case of timeout
+        private double m_stickCalibrationTimeOfLastRequest;
+        private double m_infoTimeOfLastRequest;
+        private double m_colorsTimeOfLastRequest;
 
+        // Timeout vars
         private const int configTimerDataDefault = 500;
         private int m_configDataTimer = configTimerDataDefault;
+        private const double timeout = 1.0;
+        #endregion
 
-        private bool m_deviceInfoLoaded = false;
+        #region Unity InputDevice boilerplate
+        
+        /// <summary>
+        /// The last used/added Joy-Con (R) controller.
+        /// </summary>
+        public static SwitchControllerHID current { get; private set; }
 
-        static SwitchControllerHID()
-        {
-        }
-
-
+        static SwitchControllerHID() { }
 
         [RuntimeInitializeOnLoadMethod]
         static void Init() { }
 
-        protected override void OnAdded()
-        {
-            base.OnAdded();
-            SetInputReportMode(SwitchControllerInputModeEnum.Standard);
-
-            m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
-            m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
-            m_stickCalibrationTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
-        }
-
+        /// <inheritdoc />
         public unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             StateEvent.FromUnchecked(eventPtr)->stateFormat = new FourCC("SCVS");
             InputState.Change(this, eventPtr);
         }
 
+        /// <inheritdoc />
         public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
         {
             return false;
         }
 
-        
-        public void OnNextUpdate()
-        {
-            if (!m_colorsLoaded)
-            {
-                UpdateColors();
-                return;
-            }
-            if (!m_deviceInfoLoaded)
-            {
-                UpdateDeviceInfo();
-                return;
-            }
-            if(!m_stickConfigDataLoaded)
-            {
-                UpdateStickCalibrationData();
-            }
-        }
-
-        private const double timeout = 1.0;
-
-        private double m_colorsTimeOfLastRequest;
-        private void UpdateColors()
-        {
-            // Colors aren't loaded yet.
-            var currentTime = InputRuntime.s_Instance.currentTime;
-
-            // Are we waiting for a response?
-            if (currentTime > m_colorsTimeOfLastRequest + timeout)
-            {
-                m_colorsTimeOfLastRequest = currentTime;
-                ReadColors();
-            }
-        }
-
-        private double m_infoTimeOfLastRequest;
-        private void UpdateDeviceInfo()
-        {
-            var currentTime = InputRuntime.s_Instance.currentTime;
-
-            // Are we waiting for a response?
-            if (currentTime > m_infoTimeOfLastRequest + timeout)
-            {
-                m_infoTimeOfLastRequest = currentTime;
-                ReadControllerInfo();
-            }
-        }
-
-        private double m_stickCalibrationTimeOfLastRequest;
-        private void UpdateStickCalibrationData()
-        {
-            var currentTime = InputRuntime.s_Instance.currentTime;
-
-            if (currentTime > m_stickCalibrationTimeOfLastRequest + timeout)
-            {
-                m_stickCalibrationTimeOfLastRequest = currentTime;
-                ReadStickCalibrationData();
-            }
-        }
-
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -211,6 +165,100 @@ namespace UnityEngine.InputSystem.Switch
             rightStick = GetChildControl<StickControl>("rightStick");
         }
 
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+        #endregion
+
+        #region Adding, removal and late info updates on the device
+        /// <inheritdoc />
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            // Set the controller to 60Hz reports mode instead of button events mode
+            // TODO: Check if it's the one that fails sometimes and if so, try to put it on NextUpdate with a timeout like the others
+            SetInputReportMode(InputModeEnum.Standard);
+
+            // Let the controller breathe for a sec before asking its info, color and calibration datas
+            m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+            m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+            m_stickCalibrationTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+        
+        /// <inheritdoc />
+        public void OnNextUpdate()
+        {
+            if (!m_colorsLoaded)
+            {
+                UpdateColors();
+                return;
+            }
+            if (!m_deviceInfoLoaded)
+            {
+                UpdateDeviceInfo();
+                return;
+            }
+            if(!m_stickConfigDataLoaded)
+            {
+                UpdateStickCalibrationData();
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Update the devices color info if it is outdated
+        /// </summary>
+        private void UpdateColors()
+        {
+            double currentTime = InputRuntime.s_Instance.currentTime;
+
+            // Are we waiting for a response?
+            if (currentTime > m_colorsTimeOfLastRequest + timeout)
+            {
+                m_colorsTimeOfLastRequest = currentTime;
+                ReadColors();
+            }
+        }
+
+        private void UpdateDeviceInfo()
+        {
+            double currentTime = InputRuntime.s_Instance.currentTime;
+
+            // Are we waiting for a response?
+            if (currentTime > m_infoTimeOfLastRequest + timeout)
+            {
+                m_infoTimeOfLastRequest = currentTime;
+                ReadControllerInfo();
+            }
+        }
+
+        private void UpdateStickCalibrationData()
+        {
+            double currentTime = InputRuntime.s_Instance.currentTime;
+
+            if (currentTime > m_stickCalibrationTimeOfLastRequest + timeout)
+            {
+                m_stickCalibrationTimeOfLastRequest = currentTime;
+                ReadStickCalibrationData();
+            }
+        }
+
+        
+        #endregion
+
+        #region Public interactions with the controller (output reports)
         public void Rumble(SwitchControllerRumbleProfile rumbleProfile)
         {
             var c = SwitchControllerCommand.Create(rumbleProfile);
@@ -259,7 +307,7 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.LogError("Step 3 of bluetooth pairing failed");
         }
 
-        public void SetInputReportMode(SwitchControllerInputModeEnum mode)
+        public void SetInputReportMode(InputModeEnum mode)
         {
             var c = SwitchControllerCommand.Create(subcommand: new SwitchControllerInputModeSubcommand(mode));
             if (ExecuteCommand(ref c) < 0)
@@ -287,10 +335,10 @@ namespace UnityEngine.InputSystem.Switch
         }
 
         public void SetLEDs(
-            SwitchControllerLEDStatusEnum p1 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p2 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p3 = SwitchControllerLEDStatusEnum.Off,
-            SwitchControllerLEDStatusEnum p4 = SwitchControllerLEDStatusEnum.Off)
+            LEDStatusEnum p1 = LEDStatusEnum.Off,
+            LEDStatusEnum p2 = LEDStatusEnum.Off,
+            LEDStatusEnum p3 = LEDStatusEnum.Off,
+            LEDStatusEnum p4 = LEDStatusEnum.Off)
         {
             var c = SwitchControllerCommand.Create(subcommand: new SwitchControllerSetLEDSubcommand(p1, p2, p3, p4));
 
@@ -302,7 +350,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadIMUCalibrationData()
         {
-            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6020, withLength: 0x18);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: (uint)SPIFlashReadAddressEnum.FactoryIMUCalibration, withLength: 0x18);
             Debug.Log($"Requesting IMU calibration info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -311,7 +359,7 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadColors()
         {
-            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x6050, withLength: 0x0B);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: (uint)SPIFlashReadAddressEnum.ColorData, withLength: 0x0B);
             Debug.Log($"Requesting color info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
@@ -320,69 +368,15 @@ namespace UnityEngine.InputSystem.Switch
 
         public void ReadStickCalibrationData()
         {
-            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: 0x603D, withLength: 0x12);
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: (uint)SPIFlashReadAddressEnum.FactoryStickCalibration, withLength: 0x12);
             Debug.Log($"Requesting factory stick calibration info...");
             var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Read factory stick calibration info failed");
         }
+        #endregion
 
-        private string ThingToHexString<T>(T command)
-        {
-            int size = Marshal.SizeOf(command);
-            byte[] arr = new byte[size];
-
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(command, ptr, true);
-            Marshal.Copy(ptr, arr, 0, size);
-            Marshal.FreeHGlobal(ptr);
-
-            return BitConverter.ToString(arr).Replace("-", "");
-        }
-
-        /// <summary>
-        /// The last used/added Joy-Con (R) controller.
-        /// </summary>
-        public static SwitchControllerHID current { get; private set; }
-
-        /// <inheritdoc />
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        /// <inheritdoc />
-        protected override void OnRemoved()
-        {
-            base.OnRemoved();
-            if (current == this)
-                current = null;
-        }
-
-        public enum BatteryLevelEnum
-        {
-            Full = 8,
-            Medium = 6,
-            Low = 4,
-            Critical = 2,
-            Empty = 0
-        }
-
-        public enum ControllerTypeEnum
-        {
-            JoyCon = 3,
-            ProControllerOrChargingGrip = 0
-        }
-
-        public enum SpecificControllerTypeEnum : byte
-        {
-            Unknown = 0,
-            LeftJoyCon = 1,
-            RightJoyCon = 2,
-            ProController = 3
-        }
-
+        #region Input reports (answers from the controller)
         [StructLayout(LayoutKind.Explicit)]
         private struct SwitchControllerGenericInputReport
         {
@@ -429,15 +423,15 @@ namespace UnityEngine.InputSystem.Switch
             var genericReport = (SwitchControllerGenericInputReport*)stateEvent->state;
 
             // Simple report mode!
-            if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.Simple)
+            if (genericReport->reportId == (byte)InputModeEnum.Simple)
             {
                 Debug.Log("PreProcessEvent: Simple report mode");
-                SetInputReportMode(SwitchControllerInputModeEnum.Standard);
+                SetInputReportMode(InputModeEnum.Standard);
                 return false;
             }
 
             // Subcommand reply!
-            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.ReadSubcommands)
+            else if (genericReport->reportId == (byte)InputModeEnum.ReadSubcommands)
             {
                 Debug.Log("PreProcessEvent: Subcommand report mode");
                 var data = ((SwitchControllerSubcommandResponseInputReport*)stateEvent->state);
@@ -446,7 +440,7 @@ namespace UnityEngine.InputSystem.Switch
             }
 
             // Full report mode!
-            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.Standard)
+            else if (genericReport->reportId == (byte)InputModeEnum.Standard)
             {
                 // Debug.Log("PreProcessEvent: Standard report mode");
                 var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
@@ -457,7 +451,7 @@ namespace UnityEngine.InputSystem.Switch
                 return true;
             }
 
-            else if (genericReport->reportId == (byte)SwitchControllerInputModeEnum.NFCOrIR)
+            else if (genericReport->reportId == (byte)InputModeEnum.NFCOrIR)
             {
                 Debug.Log("NFC or infra-red report");
                 return false;
@@ -479,7 +473,7 @@ namespace UnityEngine.InputSystem.Switch
             ControllerType = (ControllerTypeEnum)((connectionInfo >> 1) & 3);
             IsPoweredBySwitchOrUSB = (connectionInfo & 1) == 1;
 
-            SwitchControllerSubcommandIDEnum subcommandReplyId = (SwitchControllerSubcommandIDEnum)response.subcommandId;
+            SubcommandIDEnum subcommandReplyId = (SubcommandIDEnum)response.subcommandId;
             var subcommandWasAcknowledged = (response.ack & 0x80) != 0;
 
             Debug.Log($"Subcommand response for {subcommandReplyId}: {response.ack:X2}");
@@ -488,10 +482,10 @@ namespace UnityEngine.InputSystem.Switch
             {
                 switch (subcommandReplyId)
                 {
-                    case SwitchControllerSubcommandIDEnum.RequestDeviceInfo:
+                    case SubcommandIDEnum.RequestDeviceInfo:
                         HandleDeviceInfo(response.replyData);
                         break;
-                    case SwitchControllerSubcommandIDEnum.SPIFlashRead:
+                    case SubcommandIDEnum.SPIFlashRead:
                         HandleFlashRead(response.replyData);
                         break;
                     default:
@@ -570,27 +564,28 @@ namespace UnityEngine.InputSystem.Switch
             }
 
             // Serial number in NON-extended ASCII
-            else if (address == 0x6000 && length == 0x10)
+            else if (address == (uint)SPIFlashReadAddressEnum.SerialNumber && length == 0x10)
             {
-                Debug.Log("Read serial number... (not implemented)");
+                Debug.Log("Read serial number...");
+                DecodeSerialNumberData(response);
             } 
 
             // IMU factory calibration
-            else if (address == 0x6020 && length == 0x18)
+            else if (address == (uint)SPIFlashReadAddressEnum.FactoryIMUCalibration && length == 0x18)
             {
                 Debug.Log($"Read factory IMU calibration data...");
                 DecodeIMUCalibrationData((ushort*)response);
             }
 
             // Factory analog stick calibration
-            else if (address == 0x603D && length == 0x12)
+            else if (address == (uint)SPIFlashReadAddressEnum.FactoryStickCalibration && length == 0x12)
             {
                 Debug.Log("Read factory analog stick calibration data...");
                 DecodeStickCalibrationData(response);
             }
 
             // Colors
-            else if (address == 0x6050 && length == 0x0B)
+            else if (address == (uint)SPIFlashReadAddressEnum.ColorData && length == 0x0B)
             {
                 Debug.Log("Read controller color data...");
                 DecodeColorData(response);
@@ -609,13 +604,13 @@ namespace UnityEngine.InputSystem.Switch
             }
                 
             // User analog stick calibration
-            else if (address == 0x8010 && length == 0x16)
+            else if (address == (uint)SPIFlashReadAddressEnum.UserStickCalibration && length == 0x16)
             {
                 Debug.Log("Read user analog stick calibration data... (not implemented)");
             }
 
             // IMU user calibration
-            else if (address == 0x8026 && length == 0x1A)
+            else if (address == (uint)SPIFlashReadAddressEnum.UserIMUCalibration && length == 0x1A)
             {
                 Debug.Log($"Read user IMU calibration data...");
                 DecodeIMUCalibrationData((ushort*)response);
@@ -627,7 +622,8 @@ namespace UnityEngine.InputSystem.Switch
             }
                 
         }
-
+        #endregion
+        #region Data decoding (byte to text/)
         [StructLayout(LayoutKind.Sequential)]
         public struct Vector3Int16
         {
@@ -714,6 +710,29 @@ namespace UnityEngine.InputSystem.Switch
             {
                 return $"accelBase = {accelBase}\naccelSen = {accelSensitivity}\ngyroBase = {gyroBase}\ngyroSen = {gyroSensitivity}";
             }
+        }
+
+        private unsafe void DecodeSerialNumberData(byte* response)
+        {
+            StringBuilder snStringBuilder = new StringBuilder(15);
+
+            Debug.Log($"First byte is {(*response):X2}");
+            if ((*response)>=0X80)
+            {
+                Debug.LogWarning("No valid serial number retrieved");
+                return;
+            }
+
+            for (int i=0; i<16; i++)
+            {
+                byte* serialDigit = response+i;
+                if (*serialDigit == 0x00)
+                    continue;
+                
+                snStringBuilder.Append(Encoding.ASCII.GetString(serialDigit, 1));
+            }
+
+            SerialNumber = snStringBuilder.ToString();
         }
 
         private unsafe void DecodeIMUCalibrationData(ushort* response)
@@ -843,5 +862,6 @@ namespace UnityEngine.InputSystem.Switch
                 return String.Format($"Center: ({xCenter:X2};{yCenter:X2}), X range: [{xMin:X2}-{xMax:X2}], Y range: [{yMin:X2}-{yMax:X2}]");
             }
         }
+        #endregion
     }
 }
