@@ -9,10 +9,6 @@ namespace JoyConInput.Editor
     public class JoyconDebuggerWindow : EditorWindow
     {
         private bool leftJoyconFold = true;
-        // private bool leftGenericFold = true;
-        // private bool leftColorFold = true;
-        // private bool leftButtonsFold = true;
-        // private bool leftIMUFold = true;
         private bool rightJoyconFold = true;
 
         [MenuItem("Window/Joycon Debugger")]
@@ -30,7 +26,6 @@ namespace JoyConInput.Editor
 
         private bool SwitchControllerDebugGUI(bool fold, SwitchControllerHID joycon, string sidePrefix)
         {
-
             if (joycon == null)
             {
                 GUILayout.BeginHorizontal("box");
@@ -40,6 +35,9 @@ namespace JoyConInput.Editor
             } 
             else 
             {
+                bool isLeft = joycon.SpecificControllerType == SpecificControllerTypeEnum.LeftJoyCon;
+                bool isRight = joycon.SpecificControllerType == SpecificControllerTypeEnum.RightJoyCon;
+
                 fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, sidePrefix + " Joycon Controller");
 
                 if (fold)
@@ -67,11 +65,19 @@ namespace JoyConInput.Editor
                     EditorGUILayout.Separator();
                     GUILayout.Label("Buttons data: ", EditorStyles.boldLabel);
 
-                    // TODO: Lateralize it baby
-                    EditorGUILayout.LabelField("Stick calibration data: ", joycon.calibrationData.lStickCalibData.ToString());
+                    // TODO: Nice dislay for the buttons
+
+                    string calibrationText = "";
+                    if (isLeft)     calibrationText = joycon.calibrationData.lStickCalibData.ToString();
+                    if (isRight)    calibrationText = joycon.calibrationData.rStickCalibData.ToString();
+                    EditorGUILayout.LabelField("Stick calibration data: ", calibrationText);
 
                     EditorGUILayout.Separator();
                     GUILayout.Label("IMU data: ", EditorStyles.boldLabel);
+
+                    EditorGUILayout.LabelField("Angular velocity: ", joycon.angularVelocity.value.ToString());
+                    EditorGUILayout.LabelField("Orientation: ", joycon.orientation.value.ToString());
+                    EditorGUILayout.LabelField("Acceleration: ", joycon.acceleration.value.ToString());
                 }
 
                 EditorGUILayout.EndFoldoutHeaderGroup();
