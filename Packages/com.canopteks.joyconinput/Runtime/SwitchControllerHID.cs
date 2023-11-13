@@ -98,11 +98,13 @@ namespace UnityEngine.InputSystem.Switch
         private bool m_stickConfigDataLoaded = false;
         private bool m_deviceInfoLoaded = false;
         private bool m_colorsLoaded = false;
+        private bool m_serialNumberLoaded = false;
 
         // Register the time of last request to retry to fetch them in case of timeout
         private double m_stickCalibrationTimeOfLastRequest;
         private double m_infoTimeOfLastRequest;
         private double m_colorsTimeOfLastRequest;
+        private double m_serialNumberTimeOfLastRequest;
 
         // Timeout vars
         private const int configTimerDataDefault = 500;
@@ -187,6 +189,7 @@ namespace UnityEngine.InputSystem.Switch
             m_colorsTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
             m_infoTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
             m_stickCalibrationTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
+            m_serialNumberTimeOfLastRequest = InputRuntime.s_Instance.currentTime;
         }
 
         /// <inheritdoc />
@@ -215,6 +218,11 @@ namespace UnityEngine.InputSystem.Switch
                 UpdateStickCalibrationData();
                 return;
             }
+            if(!m_serialNumberLoaded)
+            {
+                UpdateSerialNumber();
+                return;
+            }
         }
 
         /// <summary>
@@ -241,6 +249,9 @@ namespace UnityEngine.InputSystem.Switch
             {
                 m_infoTimeOfLastRequest = currentTime;
                 ReadControllerInfo();
+
+                // Also grab the serial number, because it's a device info that is not in the device info section
+                ReadSerialNumber();
             }
         }
 
@@ -255,7 +266,16 @@ namespace UnityEngine.InputSystem.Switch
             }
         }
 
-        
+        private void UpdateSerialNumber()
+        {
+            double currentTime = InputRuntime.s_Instance.currentTime;
+
+            if (currentTime > m_serialNumberTimeOfLastRequest + timeout)
+            {
+                m_serialNumberTimeOfLastRequest = currentTime;
+                ReadSerialNumber();
+            }
+        }
         #endregion
 
         #region Public interactions with the controller (output reports)
@@ -374,6 +394,15 @@ namespace UnityEngine.InputSystem.Switch
             if (ExecuteCommand(ref c) < 0)
                 Debug.LogError("Read factory stick calibration info failed");
         }
+
+        public void ReadSerialNumber() 
+        {
+            var readSubcommand = new SwitchControllerReadSPIFlashSubcommand(atAddress: (uint)SPIFlashReadAddressEnum.SerialNumber, withLength: 0x10);
+            Debug.Log($"Requesting device serial number...");
+            var c = SwitchControllerCommand.Create(subcommand: readSubcommand);
+            if (ExecuteCommand(ref c) < 0)
+                Debug.LogError("Read device serial number failed");
+        }
         #endregion
 
         #region Input reports (answers from the controller)
@@ -443,11 +472,13 @@ namespace UnityEngine.InputSystem.Switch
             else if (genericReport->reportId == (byte)InputModeEnum.Standard)
             {
                 // Debug.Log("PreProcessEvent: Standard report mode");
-                var data = ((SwitchControllerFullInputReport*)stateEvent->state)->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
+                SwitchControllerFullInputReport* fullInputReport = ((SwitchControllerFullInputReport*)stateEvent->state);
+                var data = fullInputReport->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
                 *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
                 stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
 
                 m_currentOrientation += data.angularVelocity;
+                
                 return true;
             }
 
@@ -733,6 +764,7 @@ namespace UnityEngine.InputSystem.Switch
             }
 
             SerialNumber = snStringBuilder.ToString();
+            m_serialNumberLoaded = true;  
         }
 
         private unsafe void DecodeIMUCalibrationData(ushort* response)
@@ -857,7 +889,7 @@ namespace UnityEngine.InputSystem.Switch
                 return new StickCalibrationData() { xMin = 0, xMax = 0, yMin = 0, yMax = 0, xCenter = 0, yCenter = 0 };
             }
 
-            public override string ToString()
+            public override readonly string ToString()
             {
                 return String.Format($"Center: ({xCenter:X2};{yCenter:X2}), X range: [{xMin:X2}-{xMax:X2}], Y range: [{yMin:X2}-{yMax:X2}]");
             }
