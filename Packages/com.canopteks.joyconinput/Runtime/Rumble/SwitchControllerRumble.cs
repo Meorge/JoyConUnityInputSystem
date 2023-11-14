@@ -5,43 +5,43 @@ namespace UnityEngine.InputSystem.Switch
     [System.Serializable]
     public struct SwitchControllerRumbleProfile
     {
-        public float highBandFrequencyL;
-        public float highBandAmplitudeL;
-        public float lowBandFrequencyL;
-        public float lowBandAmplitudeL;
+        public float highBandFrequencyLeft;
+        public float highBandAmplitudeLeft;
+        public float lowBandFrequencyLeft;
+        public float lowBandAmplitudeLeft;
     
-        public float highBandFrequencyR;
-        public float highBandAmplitudeR;
-        public float lowBandFrequencyR;
-        public float lowBandAmplitudeR;
+        public float highBandFrequencyRight;
+        public float highBandAmplitudeRight;
+        public float lowBandFrequencyRight;
+        public float lowBandAmplitudeRight;
     
         public static SwitchControllerRumbleProfile CreateEmpty()
         {
             return new SwitchControllerRumbleProfile {
-                highBandFrequencyL = 0,
-                highBandAmplitudeL = 0,
-                lowBandFrequencyL = 0,
-                lowBandAmplitudeL = 0,
+                highBandFrequencyLeft = 0,
+                highBandAmplitudeLeft = 0,
+                lowBandFrequencyLeft = 0,
+                lowBandAmplitudeLeft = 0,
     
-                highBandFrequencyR = 0,
-                highBandAmplitudeR = 0,
-                lowBandFrequencyR = 0,
-                lowBandAmplitudeR = 0
+                highBandFrequencyRight = 0,
+                highBandAmplitudeRight = 0,
+                lowBandFrequencyRight = 0,
+                lowBandAmplitudeRight = 0
             };
         }
     
         public static SwitchControllerRumbleProfile CreateNeutral()
         {
             return new SwitchControllerRumbleProfile {
-                highBandFrequencyL = 320,
-                highBandAmplitudeL = 0,
-                lowBandFrequencyL = 160,
-                lowBandAmplitudeL = 0,
+                highBandFrequencyLeft = 320,
+                highBandAmplitudeLeft = 0,
+                lowBandFrequencyLeft = 160,
+                lowBandAmplitudeLeft = 0,
     
-                highBandFrequencyR = 320,
-                highBandAmplitudeR = 0,
-                lowBandFrequencyR = 160,
-                lowBandAmplitudeR = 0
+                highBandFrequencyRight = 320,
+                highBandAmplitudeRight = 0,
+                lowBandFrequencyRight = 160,
+                lowBandAmplitudeRight = 0
             };
         }
     }

@@ -42,16 +42,16 @@ namespace UnityEngine.InputSystem.Switch
                 rumbleData = new SwitchControllerDualRumbleData
                 {
                     LeftControllerRumble = SwitchControllerRumbleData.Create(
-                        highBandFrequency: rumbleProfile.Value.highBandFrequencyL,
-                        highBandAmplitude: rumbleProfile.Value.highBandAmplitudeL,
-                        lowBandFrequency: rumbleProfile.Value.lowBandFrequencyL,
-                        lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeL
+                        highBandFrequency: rumbleProfile.Value.highBandFrequencyLeft,
+                        highBandAmplitude: rumbleProfile.Value.highBandAmplitudeLeft,
+                        lowBandFrequency: rumbleProfile.Value.lowBandFrequencyLeft,
+                        lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeLeft
                     ),
                     RightControllerRumble = SwitchControllerRumbleData.Create(
-                        highBandFrequency: rumbleProfile.Value.highBandFrequencyR,
-                        highBandAmplitude: rumbleProfile.Value.highBandAmplitudeR,
-                        lowBandFrequency: rumbleProfile.Value.lowBandFrequencyR,
-                        lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeR
+                        highBandFrequency: rumbleProfile.Value.highBandFrequencyRight,
+                        highBandAmplitude: rumbleProfile.Value.highBandAmplitudeRight,
+                        lowBandFrequency: rumbleProfile.Value.lowBandFrequencyRight,
+                        lowBandAmplitude: rumbleProfile.Value.lowBandAmplitudeRight
                     )
                 };
             else

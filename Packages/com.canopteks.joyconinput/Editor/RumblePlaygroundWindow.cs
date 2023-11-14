@@ -9,16 +9,7 @@ namespace JoyConInput.Editor
     public class RumblePlaygroundWindow : EditorWindow
     {
         private bool joyconsControlFold = true;
-
-        private float highBandFrequencyL;
-        private float highBandAmplitudeL;
-        private float lowBandFrequencyL;
-        private float lowBandAmplitudeL;
-    
-        private float highBandFrequencyR;
-        private float highBandAmplitudeR;
-        private float lowBandFrequencyR;
-        private float lowBandAmplitudeR;
+        private SwitchControllerRumbleProfile rumbleProfile = SwitchControllerRumbleProfile.CreateNeutral();
 
         private bool profilePlayerFold = false;
 
@@ -32,6 +23,8 @@ namespace JoyConInput.Editor
         private void OnGUI()
         {
             joyconsControlFold = JoyConRumblePlayground(joyconsControlFold);
+
+            profilePlayerFold = RumbleProfilePlayer(profilePlayerFold);
         }
 
         private bool JoyConRumblePlayground(bool fold)
@@ -52,10 +45,10 @@ namespace JoyConInput.Editor
                 else 
                 {
                     GUILayout.Label("Left Joycon: ", EditorStyles.boldLabel);
-                    highBandFrequencyL = EditorGUILayout.Slider(highBandFrequencyL, 82, 1253);
-                    highBandAmplitudeL = EditorGUILayout.Slider(highBandAmplitudeL, 0, 1);
-                    lowBandFrequencyL = EditorGUILayout.Slider(lowBandFrequencyL, 41, 626);
-                    lowBandAmplitudeL = EditorGUILayout.Slider(lowBandAmplitudeL, 0, 1);
+                    rumbleProfile.highBandFrequencyLeft = EditorGUILayout.Slider("High band frequency: ", rumbleProfile.highBandFrequencyLeft, 82, 1253);
+                    rumbleProfile.highBandAmplitudeLeft = EditorGUILayout.Slider("High band amplitude: ", rumbleProfile.highBandAmplitudeLeft, 0, 1);
+                    rumbleProfile.lowBandFrequencyLeft = EditorGUILayout.Slider("Low band frequency: ", rumbleProfile.lowBandFrequencyLeft, 41, 626);
+                    rumbleProfile.lowBandAmplitudeLeft = EditorGUILayout.Slider("Low band amplitude: ", rumbleProfile.lowBandAmplitudeLeft, 0, 1);
                 }
 
                 
@@ -71,10 +64,10 @@ namespace JoyConInput.Editor
                 else 
                 {
                     GUILayout.Label("Right Joycon: ", EditorStyles.boldLabel);
-                    highBandFrequencyR = EditorGUILayout.Slider(highBandFrequencyR, 82, 1253);
-                    highBandAmplitudeR = EditorGUILayout.Slider(highBandAmplitudeR, 0, 1);
-                    lowBandFrequencyR = EditorGUILayout.Slider(lowBandFrequencyR, 41, 626);
-                    lowBandAmplitudeR = EditorGUILayout.Slider(lowBandAmplitudeR, 0, 1);
+                    rumbleProfile.highBandFrequencyRight = EditorGUILayout.Slider("High band frequency: ", rumbleProfile.highBandFrequencyRight, 82, 1253);
+                    rumbleProfile.highBandAmplitudeRight = EditorGUILayout.Slider("High band amplitude: ", rumbleProfile.highBandAmplitudeRight, 0, 1);
+                    rumbleProfile.lowBandFrequencyRight = EditorGUILayout.Slider("Low band frequency: ", rumbleProfile.lowBandFrequencyRight, 41, 626);
+                    rumbleProfile.lowBandAmplitudeRight = EditorGUILayout.Slider("Low band amplitude: ", rumbleProfile.lowBandAmplitudeRight, 0, 1);
                 }
 
                 EditorGUILayout.Separator();
@@ -98,7 +91,32 @@ namespace JoyConInput.Editor
 
         private bool RumbleProfilePlayer(bool fold)
         {
-            // TODO: Create a ScriptableObject to store rumble profiles
+
+            Object[] selection = Selection.GetFiltered(typeof(RumbleDataSheet), SelectionMode.Assets);
+            if(selection.Length == 0)
+            {
+                GUILayout.BeginHorizontal("box");
+                GUILayout.Label("Rumble data sheet player: ", EditorStyles.boldLabel);
+                GUILayout.Label("(none selected)");
+                GUILayout.EndHorizontal();
+                return fold;
+            }
+            fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, "Rumble data sheet player: ");
+
+            if (fold)
+            {
+                RumbleDataSheet asset = selection[0] as RumbleDataSheet;
+                GUILayout.BeginHorizontal("box");
+                GUILayout.Label(asset.name + ": ");
+                bool playButton = GUILayout.Button("Play");
+                GUILayout.EndHorizontal();
+
+                if (playButton)
+                {
+                    asset.Play();
+                }
+            }
+
             return fold;
         }
     }
