@@ -51,7 +51,6 @@ namespace JoyConInput.Editor
                     rumbleProfile.lowBandAmplitudeLeft = EditorGUILayout.Slider("Low band amplitude: ", rumbleProfile.lowBandAmplitudeLeft, 0, 1);
                 }
 
-                
                 EditorGUILayout.Separator();
                 
                 if (rightJoycon == null)
@@ -74,7 +73,7 @@ namespace JoyConInput.Editor
 
                 if (GUILayout.Button("Play the defined vibration"))
                     {
-                        PlayRumble();
+                        PlayRumble(rumbleProfile);
                     }
             }
 
@@ -83,10 +82,32 @@ namespace JoyConInput.Editor
             return fold;
         }
 
-        private void PlayRumble()
+        private void PlayRumble(SwitchControllerRumbleProfile rumble)
         {
-            Debug.Log("Brrrrrr");
-            // TODO: todo
+            SwitchControllerHID leftJoycon = SwitchJoyConLHID.current;
+            SwitchControllerHID rightJoycon = SwitchJoyConRHID.current;
+
+            if (leftJoycon != null)
+            {
+                leftJoycon.Rumble(rumble);
+            }
+
+            if (rightJoycon != null)
+            {
+                rightJoycon.Rumble(rumble);
+            }
+
+            // Test: abort the vibration
+            // var brr = SwitchControllerRumbleProfile.CreateNeutral();
+            // if (leftJoycon != null)
+            // {
+            //     leftJoycon.Rumble(brr);
+            // }
+
+            // if (rightJoycon != null)
+            // {
+            //     rightJoycon.Rumble(brr);
+            // }
         }
 
         private bool RumbleProfilePlayer(bool fold)
@@ -105,15 +126,16 @@ namespace JoyConInput.Editor
 
             if (fold)
             {
-                RumbleDataSheet asset = selection[0] as RumbleDataSheet;
-                GUILayout.BeginHorizontal("box");
-                GUILayout.Label(asset.name + ": ");
-                bool playButton = GUILayout.Button("Play");
-                GUILayout.EndHorizontal();
-
-                if (playButton)
+                foreach (Object asset in selection)
                 {
-                    asset.Play();
+                    RumbleDataSheet rumbleAsset = asset as RumbleDataSheet;
+                    GUILayout.BeginHorizontal("box");
+                    GUILayout.Label(asset.name + ": ");
+                    if (GUILayout.Button("Play"))
+                    {
+                        PlayRumble(rumbleAsset.rumbleProfile);
+                    }
+                    GUILayout.EndHorizontal();
                 }
             }
 

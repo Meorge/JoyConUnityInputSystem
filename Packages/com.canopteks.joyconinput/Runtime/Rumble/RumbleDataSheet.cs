@@ -8,21 +8,6 @@ namespace UnityEngine.InputSystem.Switch
     public class RumbleDataSheet : ScriptableObject
     {
         [SerializeField]
-        private SwitchControllerRumbleProfile rumbleProfile;
-        public void Awake()
-        {
-            rumbleProfile = SwitchControllerRumbleProfile.CreateNeutral();
-        }
-
-        public void Play()
-        {
-            if (SwitchControllerHID.current == null)
-            {
-                Debug.LogWarning("No Joycon controller detected to vibrate.");
-                return;
-            }
-            
-            SwitchControllerHID.current.Rumble(rumbleProfile);
-        }
+        public SwitchControllerRumbleProfile rumbleProfile;
     } 
 }
