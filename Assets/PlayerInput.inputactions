@@ -24,9 +24,18 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Fire",
+                    "name": "LeftTrigger",
                     "type": "Button",
                     "id": "994520ce-3bae-4929-bc54-fc5b9fd01d25",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RightTrigger",
+                    "type": "Button",
+                    "id": "f442bc90-bdaf-4991-a12a-ece5932ea247",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -39,7 +48,7 @@
                     "id": "0a876e27-07ef-438d-8248-45dc0d9a875f",
                     "path": "<SwitchJoyConLHID>/leftStick",
                     "interactions": "",
-                    "processors": "StickDeadzone(min=0.2)",
+                    "processors": "StickDeadzone",
                     "groups": "Joy-Cons",
                     "action": "Move",
                     "isComposite": false,
@@ -48,11 +57,11 @@
                 {
                     "name": "",
                     "id": "62cd053c-2a64-4180-95f2-964739bc6e25",
-                    "path": "<SwitchJoyConRHID>/buttonEast",
+                    "path": "<SwitchJoyConLHID>/leftTrigger",
                     "interactions": "",
                     "processors": "",
                     "groups": "Joy-Cons;Keyboard&Mouse",
-                    "action": "Fire",
+                    "action": "LeftTrigger",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -61,9 +70,20 @@
                     "id": "fe66f3da-51e7-489f-a5aa-026f291a26e9",
                     "path": "<SwitchJoyConRHID>/rightStick",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "StickDeadzone",
                     "groups": "Joy-Cons",
                     "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3376fdd1-8c09-4220-bf78-b906913be575",
+                    "path": "<SwitchJoyConRHID>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons;Keyboard&Mouse",
+                    "action": "RightTrigger",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
