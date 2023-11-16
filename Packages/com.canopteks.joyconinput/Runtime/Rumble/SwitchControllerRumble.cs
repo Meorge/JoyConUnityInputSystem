@@ -44,6 +44,23 @@ namespace UnityEngine.InputSystem.Switch
                 lowBandAmplitudeRight = 0
             };
         }
+
+        /// <summary>
+        /// Play the rumble defined by the structure on the specified controller if it exists.
+        /// </summary>
+        /// <param name="controller"></param>
+        public void PlayOn(params SwitchControllerHID[] controllers)
+        {
+            foreach (SwitchControllerHID controller in controllers)
+            {
+                if (controller == null)
+                    continue;
+
+                controller.Rumble(this);
+            }
+        }
+
+
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 4)]

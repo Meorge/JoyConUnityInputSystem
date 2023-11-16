@@ -6,22 +6,28 @@ using UnityEngine.InputSystem.Switch;
 
 namespace JoyConInput.Editor
 {
+    /// <summary>
+    /// Editor window displaying the informations of the controllers that can't be seen in the Input Debugger
+    /// </summary>
     public class DeviceDebugWindow : EditorWindow
     {
         private bool leftJoyconFold = true;
         private bool rightJoyconFold = true;
+        private bool proControllerFold = true;
         private Texture2D deviceColorBackground;
         private GUIStyle deviceColorStyle = new GUIStyle();
         private bool readIMU = false;
 
         private void OnEnable()
         {
+            // Workaround for the device color display
+            // The GUI.backgroundColor works as a tint for the style background texture, so we have to set it to white 
             deviceColorBackground = Texture2D.whiteTexture;
             deviceColorBackground.wrapMode = TextureWrapMode.Repeat;
             deviceColorStyle.normal.background = deviceColorBackground;
         }
         
-        [MenuItem("Window/Joycon Debugger/Joycon Device Data")]
+        [MenuItem("Window/Switch Controller Debugger/Switch Controller Data")]
         public static void ShowWindow()
         {
             DeviceDebugWindow wnd = EditorWindow.GetWindow<DeviceDebugWindow>();
@@ -30,55 +36,53 @@ namespace JoyConInput.Editor
         
         private void OnGUI()
         {
-            leftJoyconFold = JoyconDebugGUI(leftJoyconFold, SwitchJoyConLHID.current, "Left");
-            rightJoyconFold = JoyconDebugGUI(rightJoyconFold, SwitchJoyConRHID.current, "Right");
+            leftJoyconFold = ControllerDebugGUI(leftJoyconFold, SwitchJoyConLHID.current, "Left Joycon");
+            rightJoyconFold = ControllerDebugGUI(rightJoyconFold, SwitchJoyConRHID.current, "Right Joycon");
+            proControllerFold = ControllerDebugGUI(proControllerFold, SwitchProControllerNewHID.current, "Pro");
         }
 
-        private bool JoyconDebugGUI(bool fold, SwitchControllerHID joycon, string sidePrefix)
+        private bool ControllerDebugGUI(bool fold, SwitchControllerHID controller, string prefix)
         {
-            if (joycon == null)
+            if (controller == null)
             {
                 GUILayout.BeginHorizontal("box");
-                GUILayout.Label(sidePrefix + " Joycon Controller", EditorStyles.boldLabel);
+                GUILayout.Label(prefix + " Joycon Controller", EditorStyles.boldLabel);
                 GUILayout.Label("(disconnected)");
                 GUILayout.EndHorizontal();
             } 
             else 
             {
-                bool isLeft = joycon.SpecificControllerType == SpecificControllerTypeEnum.LeftJoyCon;
-                bool isRight = joycon.SpecificControllerType == SpecificControllerTypeEnum.RightJoyCon;
+                bool isLeft = controller.SpecificControllerType == SpecificControllerTypeEnum.LeftJoyCon;
+                bool isRight = controller.SpecificControllerType == SpecificControllerTypeEnum.RightJoyCon;
 
-                fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, sidePrefix + " Joycon Controller");
+                fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, prefix + " Controller");
 
                 if (fold)
                 {
                     GUILayout.Label("Generic data: ", EditorStyles.boldLabel);
-
-                    EditorGUILayout.LabelField("Firmware version: ", joycon.FirmwareVersion);
-                    EditorGUILayout.LabelField("Serial number: ", joycon.SerialNumber);
-                    EditorGUILayout.LabelField("MAC: ", joycon.MACAddress);
-
+                    // TODO: Make a tooltip with the real property name for each property display
+                    GUILayout.Label(new GUIContent($"Firmware version: {controller.FirmwareVersion}", "FirmwareVersion"));
+                    EditorGUILayout.LabelField("Serial number: ", controller.SerialNumber);
+                    EditorGUILayout.LabelField("MAC: ", controller.MACAddress);
                     EditorGUILayout.Space();
-
-                    EditorGUILayout.LabelField("Battery level: ", joycon.BatteryLevel.ToString());
-                    EditorGUILayout.LabelField("Charging: ", joycon.BatteryIsCharging.ToString());
-
+                    EditorGUILayout.LabelField("Battery level: ", controller.BatteryLevel.ToString());
+                    EditorGUILayout.LabelField("Charging: ", controller.BatteryIsCharging.ToString());
                     EditorGUILayout.Separator();
+
+                    // Display the device colors as a little square (button) in a big square (body)
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("Device colors: ", EditorStyles.boldLabel);
-
-                    // Display the device colors as a little square in a big square
                     Color oldColor = GUI.backgroundColor;
                     EditorGUILayout.BeginVertical();
                     EditorGUILayout.BeginHorizontal();
-                    GUI.backgroundColor = joycon.BodyColor;
+                    GUI.backgroundColor = controller.BodyColor;
                     GUILayout.Box("", deviceColorStyle, GUILayout.ExpandWidth(true), GUILayout.MaxWidth(90), GUILayout.ExpandHeight(true), GUILayout.MaxHeight(30));
                     EditorGUILayout.EndHorizontal();
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Box("", deviceColorStyle, GUILayout.ExpandWidth(true), GUILayout.MaxWidth(30), GUILayout.ExpandHeight(true), GUILayout.MaxHeight(30));
-                    GUI.backgroundColor = joycon.ButtonColor;
+                    GUI.backgroundColor = controller.ButtonColor;
                     GUILayout.Box("", deviceColorStyle, GUILayout.ExpandWidth(true), GUILayout.MaxWidth(30), GUILayout.ExpandHeight(true), GUILayout.MaxHeight(30));
-                    GUI.backgroundColor = joycon.BodyColor;
+                    GUI.backgroundColor = controller.BodyColor;
                     GUILayout.Box("", deviceColorStyle, GUILayout.ExpandWidth(true), GUILayout.MaxWidth(30), GUILayout.ExpandHeight(true), GUILayout.MaxHeight(30));
                     EditorGUILayout.EndHorizontal();
                     EditorGUILayout.BeginHorizontal();
@@ -87,35 +91,35 @@ namespace JoyConInput.Editor
                     EditorGUILayout.EndVertical();
                     EditorGUILayout.EndHorizontal();
                     GUI.backgroundColor = oldColor;
-
                     EditorGUILayout.Separator();
-                    GUILayout.Label("Stick data: ", EditorStyles.boldLabel);
 
+                    GUILayout.Label("Stick data: ", EditorStyles.boldLabel);
                     string calibrationText = "";
-                    if (isLeft)     calibrationText = joycon.calibrationData.lStickCalibData.ToString();
-                    if (isRight)    calibrationText = joycon.calibrationData.rStickCalibData.ToString();
+                    if (isLeft)     calibrationText = controller.calibrationData.lStickCalibData.ToString();
+                    if (isRight)    calibrationText = controller.calibrationData.rStickCalibData.ToString();
                     EditorGUILayout.LabelField("Stick calibration data: ", calibrationText);
 
                     EditorGUILayout.Separator();
                     GUILayout.Label("IMU data: ", EditorStyles.boldLabel);
 
-                    EditorGUILayout.LabelField("Angular velocity: ", joycon.angularVelocity.value.ToString());
-                    EditorGUILayout.LabelField("Orientation: ", joycon.orientation.value.ToString());
-                    EditorGUILayout.LabelField("Acceleration: ", joycon.acceleration.value.ToString());
+                    EditorGUILayout.LabelField("Angular velocity: ", controller.angularVelocity.value.ToString());
+                    EditorGUILayout.LabelField("Orientation: ", controller.orientation.value.ToString());
+                    EditorGUILayout.LabelField("Acceleration: ", controller.acceleration.value.ToString());
 
                     readIMU = EditorGUILayout.Toggle("Fast-frequency display: ", readIMU);
 
                     if (GUILayout.Button("Enable IMU"))
                     {
-                        joycon.SetIMUEnabled(true);
+                        controller.SetIMUEnabled(true);
                     }
 
-                    EditorGUILayout.Separator();
-                    GUILayout.Label("Debug: ", EditorStyles.boldLabel);
-                    if (GUILayout.Button("Tst"))
-                    {
-                        //
-                    }
+                    //* Little button for debug/dev purposes
+                    // EditorGUILayout.Separator();
+                    // GUILayout.Label("Debug: ", EditorStyles.boldLabel);
+                    // if (GUILayout.Button("Tst"))
+                    // {
+                    //     //
+                    // }
                 }
 
                 EditorGUILayout.EndFoldoutHeaderGroup();
@@ -124,6 +128,9 @@ namespace JoyConInput.Editor
             return fold;
         }
 
+        /// <summary>
+        /// Execute roughly 10 times/s.
+        /// </summary>
         private void OnInspectorUpdate()
         {
             if (readIMU)

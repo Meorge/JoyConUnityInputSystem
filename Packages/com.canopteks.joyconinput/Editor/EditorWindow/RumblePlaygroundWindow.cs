@@ -6,14 +6,18 @@ using UnityEngine.InputSystem.Switch;
 
 namespace JoyConInput.Editor
 {
+    /// <summary>
+    /// Editor window allowing to test different values for the rumble profiles, as well as files.
+    /// </summary>
     public class RumblePlaygroundWindow : EditorWindow
     {
-        private bool joyconsControlFold = true;
+        private bool profilePlaygroundFold = true;
         private SwitchControllerRumbleProfile rumbleProfile = SwitchControllerRumbleProfile.CreateNeutral();
+        private bool playProfileToggle = false;
+        private bool playProfileToggledLastFrame = false;
+        private bool dataSheetFold = false;
 
-        private bool profilePlayerFold = false;
-
-        [MenuItem("Window/Joycon Debugger/Rumble Playground")]
+        [MenuItem("Window/Switch Controller Debugger/Rumble Playground")]
         public static void ShowWindow()
         {
             RumblePlaygroundWindow wnd = EditorWindow.GetWindow<RumblePlaygroundWindow>();
@@ -22,29 +26,26 @@ namespace JoyConInput.Editor
 
         private void OnGUI()
         {
-            joyconsControlFold = JoyConRumblePlayground(joyconsControlFold);
-
-            profilePlayerFold = RumbleProfilePlayer(profilePlayerFold);
+            profilePlaygroundFold = RumbleProfilePlayground(profilePlaygroundFold);
+            dataSheetFold = RumbleDataSheetPlayer(dataSheetFold);
         }
 
-        private bool JoyConRumblePlayground(bool fold)
+        private bool RumbleProfilePlayground(bool fold)
         {
-            fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, "Joycons precise rumble");
-            SwitchControllerHID leftJoycon = SwitchJoyConLHID.current;
-            SwitchControllerHID rightJoycon = SwitchJoyConRHID.current;
+            fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, "Controllers precise rumble");
 
             if (fold)
             {
-                if (leftJoycon == null)
+                if (SwitchJoyConLHID.current == null && SwitchProControllerNewHID.current == null)
                 {
                     GUILayout.BeginHorizontal("box");
-                    GUILayout.Label("Left Joycon Controller", EditorStyles.boldLabel);
+                    GUILayout.Label("Left controller", EditorStyles.boldLabel);
                     GUILayout.Label("(disconnected)");
                     GUILayout.EndHorizontal();
                 }
                 else 
                 {
-                    GUILayout.Label("Left Joycon: ", EditorStyles.boldLabel);
+                    GUILayout.Label("Left controller: ", EditorStyles.boldLabel);
                     rumbleProfile.highBandFrequencyLeft = EditorGUILayout.Slider("High band frequency: ", rumbleProfile.highBandFrequencyLeft, 82, 1253);
                     rumbleProfile.highBandAmplitudeLeft = EditorGUILayout.Slider("High band amplitude: ", rumbleProfile.highBandAmplitudeLeft, 0, 1);
                     rumbleProfile.lowBandFrequencyLeft = EditorGUILayout.Slider("Low band frequency: ", rumbleProfile.lowBandFrequencyLeft, 41, 626);
@@ -53,16 +54,16 @@ namespace JoyConInput.Editor
 
                 EditorGUILayout.Separator();
                 
-                if (rightJoycon == null)
+                if (SwitchJoyConRHID.current == null && SwitchProControllerNewHID.current == null)
                 {
                     GUILayout.BeginHorizontal("box");
-                    GUILayout.Label("Right Joycon Controller", EditorStyles.boldLabel);
+                    GUILayout.Label("Right controller", EditorStyles.boldLabel);
                     GUILayout.Label("(disconnected)");
                     GUILayout.EndHorizontal();
                 }
                 else 
                 {
-                    GUILayout.Label("Right Joycon: ", EditorStyles.boldLabel);
+                    GUILayout.Label("Right controller: ", EditorStyles.boldLabel);
                     rumbleProfile.highBandFrequencyRight = EditorGUILayout.Slider("High band frequency: ", rumbleProfile.highBandFrequencyRight, 82, 1253);
                     rumbleProfile.highBandAmplitudeRight = EditorGUILayout.Slider("High band amplitude: ", rumbleProfile.highBandAmplitudeRight, 0, 1);
                     rumbleProfile.lowBandFrequencyRight = EditorGUILayout.Slider("Low band frequency: ", rumbleProfile.lowBandFrequencyRight, 41, 626);
@@ -71,10 +72,8 @@ namespace JoyConInput.Editor
 
                 EditorGUILayout.Separator();
 
-                if (GUILayout.Button("Play the defined vibration"))
-                    {
-                        PlayRumble(rumbleProfile);
-                    }
+                playProfileToggle = GUILayout.Toggle(playProfileToggle, "Play the defined vibration");
+                playProfileToggledLastFrame |= playProfileToggle;
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
@@ -82,38 +81,26 @@ namespace JoyConInput.Editor
             return fold;
         }
 
+        /// <summary>
+        /// Send the rumble data the whatever controller connected.
+        /// </summary>
+        /// <param name="rumble"></param>
         private void PlayRumble(SwitchControllerRumbleProfile rumble)
         {
-            SwitchControllerHID leftJoycon = SwitchJoyConLHID.current;
-            SwitchControllerHID rightJoycon = SwitchJoyConRHID.current;
-
-            if (leftJoycon != null)
-            {
-                leftJoycon.Rumble(rumble);
-            }
-
-            if (rightJoycon != null)
-            {
-                rightJoycon.Rumble(rumble);
-            }
-
-            // Test: abort the vibration
-            // var brr = SwitchControllerRumbleProfile.CreateNeutral();
-            // if (leftJoycon != null)
-            // {
-            //     leftJoycon.Rumble(brr);
-            // }
-
-            // if (rightJoycon != null)
-            // {
-            //     rightJoycon.Rumble(brr);
-            // }
+            rumble.PlayOn(SwitchProControllerNewHID.current, SwitchJoyConLHID.current, SwitchJoyConRHID.current);
         }
 
-        private bool RumbleProfilePlayer(bool fold)
+        /// <summary>
+        /// Create a "Play" button for each <see cref="RumbleDataSheet"/> asset currently selected. 
+        /// </summary>
+        /// <param name="fold">Is the panel folded or not</param>
+        /// <returns></returns>
+        private bool RumbleDataSheetPlayer(bool fold)
         {
-
+            // Grab the RumbleDataSheet assets from the selection
             Object[] selection = Selection.GetFiltered(typeof(RumbleDataSheet), SelectionMode.Assets);
+
+            // If nothing is select, don't bother displaying the fold
             if(selection.Length == 0)
             {
                 GUILayout.BeginHorizontal("box");
@@ -122,24 +109,45 @@ namespace JoyConInput.Editor
                 GUILayout.EndHorizontal();
                 return fold;
             }
-            fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, "Rumble data sheet player: ");
 
+            fold = EditorGUILayout.BeginFoldoutHeaderGroup(fold, "Rumble data sheet player: ");
             if (fold)
             {
+                // Each select file matches with a little play button to test the sequences of vibrations and stuff
                 foreach (Object asset in selection)
                 {
                     RumbleDataSheet rumbleAsset = asset as RumbleDataSheet;
                     GUILayout.BeginHorizontal("box");
                     GUILayout.Label(asset.name + ": ");
+
+                    //! Sending a single rumble profile makes it slowly fades over roughly 1s, which I find not great
+                    // TODO: Craft a dynamic sized array for button values to make the vibrations snappy
                     if (GUILayout.Button("Play"))
                     {
-                        PlayRumble(rumbleAsset.rumbleProfile);
+                        PlayRumble(rumbleAsset.profile);
                     }
                     GUILayout.EndHorizontal();
                 }
             }
 
             return fold;
+        }
+        
+        /// <summary>
+        /// Execute roughly 10 times/s.
+        /// </summary>
+        private void OnInspectorUpdate()
+        {
+            // We have to do that in the InspectorUpdate or the irregular refresh rate messes with the vibrations
+            if (playProfileToggle)
+            {
+                PlayRumble(rumbleProfile);
+            }
+            else if (playProfileToggledLastFrame)
+            {
+                PlayRumble(SwitchControllerRumbleProfile.CreateNeutral());
+                playProfileToggledLastFrame = false;
+            }
         }
     }
 }

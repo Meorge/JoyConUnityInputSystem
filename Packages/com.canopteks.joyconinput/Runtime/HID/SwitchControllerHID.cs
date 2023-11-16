@@ -770,7 +770,7 @@ namespace UnityEngine.InputSystem.Switch
         private unsafe void DecodeIMUCalibrationData(ushort* response)
         {
             calibrationData.imuCalibData = IMUCalibrationData.FromResponse(response);
-            Debug.Log(calibrationData.imuCalibData);
+            Debug.Log("Calibration data: " + calibrationData.imuCalibData);
         }
 
         private unsafe void DecodeStickCalibrationData(byte* response)
