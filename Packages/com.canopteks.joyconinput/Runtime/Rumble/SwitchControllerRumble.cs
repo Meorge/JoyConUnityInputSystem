@@ -1,8 +1,9 @@
+using System;
 using System.Runtime.InteropServices;
 
 namespace UnityEngine.InputSystem.Switch
 {
-    [System.Serializable]
+    [Serializable]
     public struct SwitchControllerRumbleProfile
     {
         public float highBandFrequencyLeft;
@@ -59,8 +60,6 @@ namespace UnityEngine.InputSystem.Switch
                 controller.Rumble(this);
             }
         }
-
-
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 4)]
