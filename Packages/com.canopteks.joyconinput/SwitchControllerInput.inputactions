@@ -507,7 +507,7 @@
             ]
         },
         {
-            "name": "LeftHand Interaction",
+            "name": "LeftHand Raw",
             "id": "632610fa-7c26-4c1d-8023-aace7d5033f7",
             "actions": [
                 {
@@ -520,7 +520,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SecondaryTrigger",
+                    "name": "Shoulder",
                     "type": "Button",
                     "id": "91a09c97-d37b-4c6a-89e0-557e2274329e",
                     "expectedControlType": "Button",
@@ -548,17 +548,35 @@
                 },
                 {
                     "name": "AnalogStick",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "1e7e758a-60c6-47d2-9a76-47e7bfa4bbd5",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ClickStick",
+                    "type": "Button",
+                    "id": "453636aa-fa28-46c0-b62d-8948ea5a3ad4",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ClickStick",
+                    "name": "Dpad",
+                    "type": "Value",
+                    "id": "ac7be712-f616-4cd6-96b7-69a93e561988",
+                    "expectedControlType": "Dpad",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Minus",
                     "type": "Button",
-                    "id": "453636aa-fa28-46c0-b62d-8948ea5a3ad4",
+                    "id": "8fe64c3f-d450-49ff-9264-6ab6851e93b0",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -569,10 +587,10 @@
                 {
                     "name": "",
                     "id": "587d5400-f556-414b-b261-3f064ce403b8",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/leftTrigger",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Joy-Cons",
                     "action": "Trigger",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -580,21 +598,21 @@
                 {
                     "name": "",
                     "id": "7c848db9-7458-49ee-93e4-637646759103",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/leftShoulder",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "SecondaryTrigger",
+                    "groups": "Joy-Cons",
+                    "action": "Shoulder",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "08cf0a61-df16-4e06-8b6e-a87377ddc4af",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/leftShoulderMini",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Joy-Cons",
                     "action": "Grab",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -602,10 +620,10 @@
                 {
                     "name": "",
                     "id": "446d1da6-f0f7-4540-8fae-d5677a199391",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/rightShoulderMini",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Joy-Cons",
                     "action": "SecondaryGrab",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -613,10 +631,10 @@
                 {
                     "name": "",
                     "id": "95814563-c7b3-445f-8962-bcd6ee3fcf40",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/leftStick",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Joy-Cons",
                     "action": "AnalogStick",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -624,11 +642,261 @@
                 {
                     "name": "",
                     "id": "303412dd-e0ff-4fa6-98f6-04345ca933fc",
-                    "path": "",
+                    "path": "<SwitchJoyConLHID>/leftStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "ClickStick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "44d48188-ae87-450e-a06c-4a2d75ce25bf",
+                    "path": "<SwitchJoyConLHID>/dpad",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Dpad",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3fc53b98-45e1-4cea-b52e-ee4d41036ea0",
+                    "path": "<SwitchJoyConLHID>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Minus",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "RightHand Raw",
+            "id": "49db88e7-b51e-4594-9869-982a09ed73ff",
+            "actions": [
+                {
+                    "name": "Trigger",
+                    "type": "Button",
+                    "id": "2272633c-64e6-4ccc-911b-48221517f8c9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Shoulder",
+                    "type": "Button",
+                    "id": "9d5b6f4b-ac3a-48ea-96c8-affb42b7bf3d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Grab",
+                    "type": "Button",
+                    "id": "ba1100d7-b1c8-4a16-8d60-71d0098950f8",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SecondaryGrab",
+                    "type": "Button",
+                    "id": "c1feee91-1ce2-4168-989a-a31ce2e41a4e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AnalogStick",
+                    "type": "Value",
+                    "id": "261a3121-77f4-41f6-a51f-7fdd40358a8e",
+                    "expectedControlType": "Stick",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ClickStick",
+                    "type": "Button",
+                    "id": "5b04f5ba-e082-4b86-a8f9-10fa33937398",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Plus",
+                    "type": "Button",
+                    "id": "8db99e3b-d871-4ca7-8c08-3e841146ddcb",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "A",
+                    "type": "Button",
+                    "id": "e9be8f10-ce88-45a5-ad26-1a85957e8f95",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "B",
+                    "type": "Button",
+                    "id": "78ce07c3-5d61-44df-b4bc-d9a6aa03eae5",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "X",
+                    "type": "Button",
+                    "id": "8203c674-5be6-4004-9ac6-8b157dcf360b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Y",
+                    "type": "Button",
+                    "id": "20eb0560-ce9a-4dfb-a235-1a42d1c0a74b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "62c8c92a-2293-478c-b780-bf86f16a8347",
+                    "path": "<SwitchJoyConRHID>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Trigger",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7b629957-f4dd-41d4-b282-140ae7b1ffbc",
+                    "path": "<SwitchJoyConRHID>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Shoulder",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f7a3221b-086d-4677-909c-cc28aae06f0e",
+                    "path": "<SwitchJoyConRHID>/rightShoulderMini",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Grab",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "40140218-fb3a-4f14-b9e3-789e5deb773b",
+                    "path": "<SwitchJoyConRHID>/leftShoulderMini",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "SecondaryGrab",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "30ae6eb0-5e68-4356-a09a-9cefb05952c8",
+                    "path": "<SwitchJoyConRHID>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "AnalogStick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "66c4c115-eb98-4005-be6b-5336a455d662",
+                    "path": "<SwitchJoyConRHID>/rightStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "ClickStick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "10e2036b-4f8c-4819-8a45-24138ef0047e",
+                    "path": "<SwitchJoyConRHID>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Plus",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "52397ff8-94a7-46e8-9971-aa14501fa9a6",
+                    "path": "<SwitchJoyConRHID>/buttonEast",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "A",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f9b90765-5329-4a39-ae39-14e6a12712fd",
+                    "path": "<SwitchJoyConRHID>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "B",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "77acfa0f-883a-4304-bfa0-08392dfce180",
+                    "path": "<SwitchJoyConRHID>/buttonNorth",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ClickStick",
+                    "action": "X",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "180c864d-c9bc-46d7-95ad-138bd065ec6f",
+                    "path": "<SwitchJoyConRHID>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joy-Cons",
+                    "action": "Y",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
