@@ -1,6 +1,6 @@
 {
-    "name": "JoyConInput.Editor",
-    "rootNamespace": "JoyConInput.Editor",
+    "name": "SwitchControllerInput.Editor",
+    "rootNamespace": "SwitchControllerInput.Editor",
     "references": [
         "GUID:75469ad4d38634e559750d17036d5f7c"
     ],

@@ -1,10 +1,12 @@
 {
   "dependencies": {
-    "com.canopteks.joyconinput": {
-      "version": "file:com.canopteks.joyconinput",
+    "com.canopteks.switchcontrollerinput": {
+      "version": "file:com.canopteks.switchcontrollerinput",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.unity.inputsystem": "1.7.0"
+      }
     },
     "com.unity.ai.navigation": {
       "version": "1.1.4",

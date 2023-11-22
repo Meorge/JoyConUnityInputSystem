@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Switch;
 
-namespace JoyConInput.Editor
+namespace SwitchControllerInput.Editor
 {
     /// <summary>
     /// Editor window displaying the informations of the controllers that can't be seen in the Input Debugger

@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Switch;
 
-namespace JoyConInput.Editor
+namespace SwitchControllerInput.Editor
 {
     /// <summary>
     /// Editor window allowing to test different values for the rumble profiles, as well as files.

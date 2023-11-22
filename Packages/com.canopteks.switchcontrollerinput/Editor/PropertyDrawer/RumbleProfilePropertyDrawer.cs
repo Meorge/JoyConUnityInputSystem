@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Switch;
 
-namespace JoyConInput.Editor
+namespace SwitchControllerInput.Editor
 {
     /// <summary>
     /// Custom property editor for <see cref="SwitchControllerRumbleProfile"/> with ranged sliders and a test button.
