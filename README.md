@@ -2,6 +2,10 @@
 
 This is a prototype for Nintendo Switch controller Bluetooth support for the new Unity Input System, brought to compatibility with the latest versions of Unity and its InputSystem package.
 
+## Installation 
+
+Using the Unity Package Manager, add the package from the following git URL: https://forge.icube.unistra.fr/invirtuo/stereolab.git?path=/Packages/fr.icube.gaia.stereolab.
+
 ## Notes
 
 - Keep in mind that the left and right Joy-Cons are treated by Unity as separate controllers. As a result, you'll need to make sure you use the correct controller in bindings.
@@ -20,6 +24,10 @@ This is a prototype for Nintendo Switch controller Bluetooth support for the new
 
 ## Supported features
 
+### Device data analysis
+
+General data about the connected Switch controllers can be found in the menu `Windows/Switch Controller Debugger/Joycon Device Data`. This however doesn't include the input data, which can be found instead `Windows/Analysis/Input Debugger` (as well as the input data of every other controller).
+
 ### Input
 
 - A, B, X, Y on Joy-Con (R) and Pro Controller as `buttonEast`, `buttonSouth`, `buttonNorth`, and `buttonEast` respectively
@@ -30,7 +38,7 @@ This is a prototype for Nintendo Switch controller Bluetooth support for the new
 - Left and right analog sticks and stick presses
   - **Note**: Although they use the factory configuration/calibration info, they still seem to have significant drift
 
-### HD Rumble
+### HD Rumble: WIP
 
 High-band and low-band amplitude and frequency for the left and right Joy-Cons (or, in the case of the Pro Controller, the left and right sides of the controller) can be set with the `SwitchControllerHID.Rumble()` method.
 
@@ -53,7 +61,7 @@ var rumbleProfile = new SwitchControllerRumbleProfile
 controller.Rumble(rumbleProfile);
 ```
 
-The `RumbleTesting` example scene and code allows you to manually set the rumble on a controller.
+The HD Rumble features can be tested `Windows/Switch Controller Debugger/Joycon Rumble Playground`
 
 ### Gyroscope and acceleration (partial)
 
