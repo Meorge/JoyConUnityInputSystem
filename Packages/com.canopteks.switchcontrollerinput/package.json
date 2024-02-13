@@ -1,0 +1,14 @@
+{
+  "name": "com.canopteks.switchcontrollerinput",
+  "version": "1.0.0",
+  "displayName": "SwitchControllerInput",
+  "description": "Package providing compatibility for Nintendo Switch controllers using the Unity's InputSystem. Provides also tools for input reading, vibration and accelerometer/gyroscope control.",
+  "unity": "2022.3",
+  "author": {
+    "name": "Thomas Duhamel",
+    "email": "thomas.duhamel@protonmail.com"
+  },
+  "dependencies": {
+    "com.unity.inputsystem": "1.7.0"
+  }
+}

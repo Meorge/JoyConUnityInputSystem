@@ -123,8 +123,8 @@ public class RumbleTest : MonoBehaviour
     SwitchControllerRumbleProfile MusicalNote(float note)
     {
         var a = SwitchControllerRumbleProfile.CreateEmpty();
-        a.highBandAmplitudeR = 1;
-        a.highBandFrequencyR = note;
+        a.highBandAmplitudeRight = 1;
+        a.highBandFrequencyRight = note;
         return a;
     }
 
@@ -139,25 +139,25 @@ public class RumbleTest : MonoBehaviour
 
     public void OnHFFreqUpdated(float v)
     {
-        m_profile.highBandFrequencyL = v;
-        m_profile.highBandFrequencyR = v;
+        m_profile.highBandFrequencyLeft = v;
+        m_profile.highBandFrequencyRight = v;
     }
 
     public void OnHFAmpUpdated(float v)
     {
-        m_profile.highBandAmplitudeL = v;
-        m_profile.highBandAmplitudeR = v;
+        m_profile.highBandAmplitudeLeft = v;
+        m_profile.highBandAmplitudeRight = v;
     }
 
     public void OnLFFreqUpdated(float v)
     {
-        m_profile.lowBandFrequencyL = v;
-        m_profile.lowBandFrequencyR = v;
+        m_profile.lowBandFrequencyLeft = v;
+        m_profile.lowBandFrequencyRight = v;
     }
 
     public void OnLFAmpUpdated(float v)
     {
-        m_profile.lowBandAmplitudeL = v;
-        m_profile.lowBandAmplitudeR = v;
+        m_profile.lowBandAmplitudeLeft = v;
+        m_profile.lowBandAmplitudeRight = v;
     }
 }
