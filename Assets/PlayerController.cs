@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Switch;
 
+using System.Net.NetworkInformation;
+using System;
+
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] PlayerInput pInput = null;
@@ -19,7 +22,48 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        // StartCoroutine(RumbleCoroutine());
+
+        // Debug.Log("Is SwitchControllerHID null: " + SwitchControllerHID.current==null);
+        // if (SwitchControllerHID.current != null)
+        // {
+        //     SwitchControllerHID.current.SetVibrationEnabled(true);
+        //     // StartCoroutine(RumbleCoroutine());
+
+        //     SwitchControllerHID.current.SetLEDs(
+        //         p1: SwitchControllerLEDStatusEnum.Flashing,
+        //         p2: SwitchControllerLEDStatusEnum.On,
+        //         p3: SwitchControllerLEDStatusEnum.Off,
+        //         p4: SwitchControllerLEDStatusEnum.On
+        //     );
+        //     // SwitchJoyConLHID.current?.SetLEDs(
+        //     //     p1: SwitchControllerLEDStatusEnum.Flashing,
+        //     //     p2: SwitchControllerLEDStatusEnum.On,
+        //     //     p3: SwitchControllerLEDStatusEnum.Off,
+        //     //     p4: SwitchControllerLEDStatusEnum.On
+        //     // );
+        // }
+    }
+
+    private void OnApplicationQuit()
+    {
+        // Debug.Log("Is SwitchControllerHID null: " + SwitchControllerHID.current);
+        // if (SwitchControllerHID.current != null)
+        // {
+        //     SwitchControllerHID.current.SetVibrationEnabled(false);
+
+        //     SwitchControllerHID.current.SetLEDs(
+        //         p1: SwitchControllerLEDStatusEnum.On,
+        //         p2: SwitchControllerLEDStatusEnum.Off,
+        //         p3: SwitchControllerLEDStatusEnum.Off,
+        //         p4: SwitchControllerLEDStatusEnum.Off
+        //     );
+        //     // SwitchJoyConLHID.current?.SetLEDs(
+        //     //     p1: SwitchControllerLEDStatusEnum.On,
+        //     //     p2: SwitchControllerLEDStatusEnum.Off,
+        //     //     p3: SwitchControllerLEDStatusEnum.Off,
+        //     //     p4: SwitchControllerLEDStatusEnum.Off
+        //     // );
+        // }
     }
 
     // Update is called once per frame
@@ -27,7 +71,7 @@ public class PlayerController : MonoBehaviour
     {
         transform.Translate(new Vector3(m_movement.x, 0, m_movement.y));
         // rb.AddForce(new Vector3(m_movement.x, 0, m_movement.y));
-        amp = (Mathf.Sin(Time.time) + 1) / 2;
+        amp = Mathf.Clamp((Mathf.Sin(Time.time) + 1) / 2, 0f, 1f);
         ampOffset = (Mathf.Sin(Time.time + Mathf.PI) + 1) / 2;
     }
 
@@ -37,33 +81,21 @@ public class PlayerController : MonoBehaviour
         {
             SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
             {
-                highBandFrequencyL = 160,
-                highBandAmplitudeL = amp,
+                highBandFrequencyLeft = 160,
+                highBandAmplitudeLeft = 0,
                 
-                lowBandFrequencyL = 160,
-                lowBandAmplitudeL = 0,//amp * 0.1f,
+                lowBandFrequencyLeft = 160,
+                lowBandAmplitudeLeft = 0,//amp * 0.1f,
 
                 
-                highBandFrequencyR = 160,
-                highBandAmplitudeR = 0,
+                highBandFrequencyRight = 160,
+                highBandAmplitudeRight = 0,
                 
-                lowBandFrequencyR = 160,
-                lowBandAmplitudeR = 0//amp * 0.1f
+                lowBandFrequencyRight = 160,
+                lowBandAmplitudeRight = amp * 0.5f
             });
             yield return new WaitForSeconds(1f);
         }
-    }
-
-    void OnMove(InputValue value)
-    {
-        var tempMovement = value.Get<Vector2>() * 0.1f;
-        
-        if (tempMovement.magnitude > 10)
-        {
-            Debug.Log($"Got a movement vector of {tempMovement}, too big so discarding");
-            return;
-        }
-        m_movement = tempMovement;
     }
 
     void OnFire()
@@ -72,37 +104,30 @@ public class PlayerController : MonoBehaviour
         StartCoroutine(QuickRumble());
     }
 
-    void OnCollisionEnter(Collision c)
-    {
-        if (!c.gameObject.CompareTag("Block")) return;
-        Debug.Log("Hit something");
-        //StartCoroutine(QuickRumble());
-    }
-
     IEnumerator QuickRumble()
     {
         SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
         {
-            lowBandFrequencyL = 0,
-            lowBandAmplitudeL = 0,
+            lowBandFrequencyLeft = 0,
+            lowBandAmplitudeLeft = 0,
             
-            lowBandFrequencyR = 0,
-            lowBandAmplitudeR = 0,
+            lowBandFrequencyRight = 0,
+            lowBandAmplitudeRight = 0,
             
-            highBandFrequencyR = 150,
-            highBandAmplitudeR = 1
+            highBandFrequencyRight = 150,
+            highBandAmplitudeRight = 1
         });
         yield return new WaitForSeconds(0.1f);
         SwitchControllerHID.current.Rumble(new SwitchControllerRumbleProfile
         {
-            lowBandFrequencyL = 0,
-            lowBandAmplitudeL = 0,
+            lowBandFrequencyLeft = 0,
+            lowBandAmplitudeLeft = 0,
             
-            lowBandFrequencyR = 0,
-            lowBandAmplitudeR = 0,
+            lowBandFrequencyRight = 0,
+            lowBandAmplitudeRight = 0,
             
-            highBandFrequencyR = 115,
-            highBandAmplitudeR = 0
+            highBandFrequencyRight = 115,
+            highBandAmplitudeRight = 0
         });
     }
 }
