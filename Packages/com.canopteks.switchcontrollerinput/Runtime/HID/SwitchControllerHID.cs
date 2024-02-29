@@ -465,20 +465,23 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.Log("PreProcessEvent: Subcommand report mode");
                 var data = ((SwitchControllerSubcommandResponseInputReport*)stateEvent->state);
                 HandleSubcommand(*data);
+
+                // This appears to fix the bug where the input was flickering
+                // while receiving subcommand replies, but I'm not 100% sure
+                // how it fixes it, since the response should follow a different
+                // format I think??
+                // ...or maybe not, looks like the data should come in the same
+                // packet, according to this:
+                // https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/bluetooth_hid_notes.md#standard-input-report-format
+                HandleFullReport(stateEvent);
+                
                 return true;
             }
 
             // Full report mode!
             else if (genericReport->reportId == (byte)InputModeEnum.Standard)
             {
-                // Debug.Log("PreProcessEvent: Standard report mode");
-                SwitchControllerFullInputReport* fullInputReport = ((SwitchControllerFullInputReport*)stateEvent->state);
-                var data = fullInputReport->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
-                *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
-                stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
-
-                m_currentOrientation += data.angularVelocity;
-                
+                HandleFullReport(stateEvent);
                 return true;
             }
 
@@ -492,6 +495,15 @@ namespace UnityEngine.InputSystem.Switch
                 Debug.Log($"Unknown report ID: {genericReport->reportId:X2}");
             }
             return false;
+        }
+
+        private unsafe void HandleFullReport(StateEvent* stateEvent)
+        {
+                SwitchControllerFullInputReport* fullInputReport = ((SwitchControllerFullInputReport*)stateEvent->state);
+                var data = fullInputReport->ToHIDInputReport(ref calibrationData, SpecificControllerType, m_currentOrientation);
+                *((SwitchControllerVirtualInputState*)stateEvent->state) = data;
+                stateEvent->stateFormat = SwitchControllerVirtualInputState.Format;
+                m_currentOrientation += data.angularVelocity;
         }
 
         private unsafe void HandleSubcommand(SwitchControllerSubcommandResponseInputReport response)
