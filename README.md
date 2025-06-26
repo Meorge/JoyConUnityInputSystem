@@ -4,7 +4,7 @@ This is a prototype for Nintendo Switch controller Bluetooth support for the new
 
 ## Installation 
 
-Using the Unity Package Manager, add the package from the following git URL: https://forge.icube.unistra.fr/invirtuo/stereolab.git?path=/Packages/fr.icube.gaia.stereolab.
+Using the Unity Package Manager, add the package from the following git URL: https://github.com/Meorge/JoyConUnityInputSystem.git?path=/Packages/com.canopteks.switchcontrollerinput.
 
 ## Notes
 
