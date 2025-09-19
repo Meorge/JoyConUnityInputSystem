@@ -1,10 +1,19 @@
 # Nintendo Switch Controllers for Unity Input System
 
+>[!WARNING]
+> The original JoyConUnityInputSystem repository owned by me ([Meorge](https://github.com/Meorge)) is no longer being maintained, and is in read-only mode as a result.
+> You may want to consider these options:
+>
+> - I have an engine-agnostic C++ library for interfacing with Switch controllers called [SwitchKit](https://github.com/Meorge/SwitchKit), as well as [Godot bindings for it](https://github.com/Meorge/SwitchKit-Godot).
+> SwitchKit has more functionality than JoyConUnityInputSystem (as I have left it), including the ability to read the Ring-Con accessory's flex.
+> No Unity bindings of SwitchKit have been created as of my writing this, but if anyone would like to have a go at it then please do so (and let me know so I can add a link to the SwitchKit repository)!
+> - Some people have forked JoyConUnityInputSystem and made improvements to it; you can find them on the [Forks page](https://github.com/Meorge/JoyConUnityInputSystem/forks).
+
 This is a prototype for Nintendo Switch controller Bluetooth support for the new Unity Input System, brought to compatibility with the latest versions of Unity and its InputSystem package.
 
-## Installation 
+## Installation
 
-Using the Unity Package Manager, add the package from the following git URL: https://github.com/Meorge/JoyConUnityInputSystem.git?path=/Packages/com.canopteks.switchcontrollerinput.
+Using the Unity Package Manager, add the package from the following git URL: <https://github.com/Meorge/JoyConUnityInputSystem.git?path=/Packages/com.canopteks.switchcontrollerinput>.
 
 ## Notes
 
@@ -69,9 +78,10 @@ Once the controller's IMU has been enabled with `SwitchControllerHID.SetIMUEnabl
 
 ### Player LEDs
 
-The green LEDs on the controllers can be set with `SwitchControllerHID.SetLEDs()`. 
+The green LEDs on the controllers can be set with `SwitchControllerHID.SetLEDs()`.
 
 Example:
+
 ```c#
 controller.SetLEDs(
     p1: SwitchControllerLEDStatusEnum.Off,
@@ -84,8 +94,6 @@ controller.SetLEDs(
 However, quitting the application doesn't reset the LEDs. If you want them to get back to their initial state, you should either restart the controller or set the LEDs again in the `OnApplicationQuit()` method of a GameObject.
 
 ## Credits
-
-Fork of the repository [JoyConUnityInputSystem]https://github.com/Meorge/JoyConUnityInputSystem by [Meorge](https://github.com/Meorge), which is itself largely based on: 
 
 - The amazing [Nintendo Switch Reverse Engineering](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering) repository
   - Format for parsing controller data and sending subcommands is from [bluetooth_hid_notes.md](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/bluetooth_hid_notes.md) and [bluetooth_hid_subcommands_notes.md](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/bluetooth_hid_subcommands_notes.md)
