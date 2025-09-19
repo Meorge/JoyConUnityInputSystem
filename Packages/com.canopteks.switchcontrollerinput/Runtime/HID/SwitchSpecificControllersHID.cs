@@ -101,7 +101,8 @@ namespace UnityEngine.InputSystem.Switch
             var matcher = new InputDeviceMatcher()
                 .WithInterface("HID")
                 .WithCapability("vendorId", 0x57E)
-                .WithCapability("productId", 0x2009);
+                .WithCapability("productId", 0x2009)
+                .WithProduct("Wireless Gamepad");
             
             InputSystem.RegisterLayout<SwitchProControllerNewHID>(matches: matcher);
             

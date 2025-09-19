@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Switch;
 
 namespace SwitchControllerInput.Editor
@@ -26,14 +28,14 @@ namespace SwitchControllerInput.Editor
             deviceColorBackground.wrapMode = TextureWrapMode.Repeat;
             deviceColorStyle.normal.background = deviceColorBackground;
         }
-        
+
         [MenuItem("Window/Switch Controller Debugger/Switch Controller Data")]
         public static void ShowWindow()
         {
             DeviceDebugWindow wnd = EditorWindow.GetWindow<DeviceDebugWindow>();
             wnd.titleContent = new GUIContent("Joycon Device Data");
         }
-        
+
         private void OnGUI()
         {
             leftJoyconFold = ControllerDebugGUI(leftJoyconFold, SwitchJoyConLHID.current, "Left Joycon");
@@ -49,8 +51,8 @@ namespace SwitchControllerInput.Editor
                 GUILayout.Label(prefix + " Joycon Controller", EditorStyles.boldLabel);
                 GUILayout.Label("(disconnected)");
                 GUILayout.EndHorizontal();
-            } 
-            else 
+            }
+            else
             {
                 bool isLeft = controller.SpecificControllerType == SpecificControllerTypeEnum.LeftJoyCon;
                 bool isRight = controller.SpecificControllerType == SpecificControllerTypeEnum.RightJoyCon;
@@ -95,31 +97,101 @@ namespace SwitchControllerInput.Editor
 
                     GUILayout.Label("Stick data: ", EditorStyles.boldLabel);
                     string calibrationText = "";
-                    if (isLeft)     calibrationText = controller.calibrationData.lStickCalibData.ToString();
-                    if (isRight)    calibrationText = controller.calibrationData.rStickCalibData.ToString();
+                    if (isLeft) calibrationText = controller.calibrationData.lStickCalibData.ToString();
+                    if (isRight) calibrationText = controller.calibrationData.rStickCalibData.ToString();
                     EditorGUILayout.LabelField("Stick calibration data: ", calibrationText);
 
                     EditorGUILayout.Separator();
                     GUILayout.Label("IMU data: ", EditorStyles.boldLabel);
 
-                    EditorGUILayout.LabelField("Angular velocity: ", controller.angularVelocity.value.ToString());
-                    EditorGUILayout.LabelField("Orientation: ", controller.orientation.value.ToString());
-                    EditorGUILayout.LabelField("Acceleration: ", controller.acceleration.value.ToString());
+                    EditorGUILayout.LabelField("Angular velocity (Calibrated): ", controller.angularVelocity.value.ToString());
+                    EditorGUILayout.LabelField("Angular velocity (Uncalibrated): ", controller.uncalibratedAngularVelocity.value.ToString());
+                    EditorGUILayout.LabelField("Orientation: ", controller.orientation.value.ToString("F2"));
+                    EditorGUILayout.LabelField("Acceleration (Calibrated): ", controller.acceleration.value.ToString());
+                    EditorGUILayout.LabelField("Acceleration (Uncalibrated): ", controller.uncalibratedAcceleration.value.ToString());
+
+                    EditorGUILayout.Space();
+                    GUILayout.Label("IMU Calibration Data:", EditorStyles.boldLabel);
+
+                    var accelBase = controller.calibrationData.imuCalibData.accelBase;
+                    var accelSens = controller.calibrationData.imuCalibData.accelSensitivity;
+                    var gyroBase = controller.calibrationData.imuCalibData.gyroBase;
+                    var gyroSens = controller.calibrationData.imuCalibData.gyroSensitivity;
+
+                    EditorGUILayout.LabelField("Accel Base/Sensitivity:", $"({(short)accelBase.x}, {(short)accelBase.y}, {(short)accelBase.z}) / ({(short)accelSens.x}, {(short)accelSens.y}, {(short)accelSens.z})");
+                    EditorGUILayout.LabelField("Gyro Base/Sensitivity:", $"({(short)gyroBase.x}, {(short)gyroBase.y}, {(short)gyroBase.z}) / ({(short)gyroSens.x}, {(short)gyroSens.y}, {(short)gyroSens.z})");
 
                     readIMU = EditorGUILayout.Toggle("Fast-frequency display: ", readIMU);
+
+                    controller.MadgwickBeta = EditorGUILayout.Slider("Madgwick Beta (Gain)", controller.MadgwickBeta, 0.0f, 1.0f);
+
+                    // add horizontal arrangement for the buttons
+                    EditorGUILayout.BeginHorizontal();
+                    GUI.enabled = controller.CurrentCalibrationState != SwitchControllerHID.CalibrationState.InProgress;
+                    if (GUILayout.Button("Write User Calibration"))
+                    {
+                        if (EditorUtility.DisplayDialog("Write User Calibration?", "This will permanently write the current calibration data to the controller's user memory. Are you sure?", "Write", "Cancel"))
+                        {
+                            // Start calibration after a 2-second delay to allow the user to place the controller.
+                            controller.StartIMUCalibration(5.0f);
+                        }
+                    }
+
+                    if (GUILayout.Button("Read User Calibration"))
+                    {
+                        controller.ReadUserIMUCalibrationData();
+                    }
 
                     if (GUILayout.Button("Enable IMU"))
                     {
                         controller.SetIMUEnabled(true);
                     }
 
-                    //* Little button for debug/dev purposes
-                    // EditorGUILayout.Separator();
-                    // GUILayout.Label("Debug: ", EditorStyles.boldLabel);
-                    // if (GUILayout.Button("Tst"))
-                    // {
-                    //     //
-                    // }
+                    if (GUILayout.Button("Disable IMU"))
+                    {
+                        controller.SetIMUEnabled(false);
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.Separator();
+                    GUILayout.Label("LEDs: ", EditorStyles.boldLabel);
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button("P1"))
+                    {
+                        controller.SetLEDs(p1: LEDStatusEnum.On);
+                    }
+                    if (GUILayout.Button("P2"))
+                    {
+                        controller.SetLEDs(p2: LEDStatusEnum.On);
+                    }
+                    if (GUILayout.Button("P3"))
+                    {
+                        controller.SetLEDs(p3: LEDStatusEnum.On);
+                    }
+                    if (GUILayout.Button("P4"))
+                    {
+                        controller.SetLEDs(p4: LEDStatusEnum.On);
+                    }
+                    if (GUILayout.Button("Off"))
+                    {
+                        controller.SetLEDs();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (GUILayout.Button("Read Factory Calibration"))
+                    {
+                        controller.ReadFactoryIMUCalibrationData();
+                    }
+                    if (GUILayout.Button("Reset Yaw"))
+                    {
+                        controller.ResetYaw();
+                    }
+                    if (controller.CurrentCalibrationState == SwitchControllerHID.CalibrationState.InProgress)
+                    {
+                        EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(), controller.CalibrationProgress, "Calibrating...");
+                    }
+
+
                 }
 
                 EditorGUILayout.EndFoldoutHeaderGroup();

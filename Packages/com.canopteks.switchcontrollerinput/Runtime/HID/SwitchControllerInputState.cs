@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 // as a base here
 namespace UnityEngine.InputSystem.Switch.LowLevel
 {
-    #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct SwitchControllerVirtualInputState : IInputStateTypeInfo
     {
@@ -67,6 +67,16 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "orientation", layout = "Vector3", format = "VEC3", noisy = true)]
         public Vector3 orientation;
 
+        [InputControl(name = "deviceRotation", layout = "Quaternion", format = "QUAT", noisy = true, displayName = "Device Rotation")]
+        public Quaternion deviceRotation;
+
+        // These are exposed as controls for debugging purposes.
+        [InputControl(name = "uncalibratedAcceleration", layout = "Vector3", format = "VEC3", noisy = true, displayName = "Uncalibrated Acceleration")]
+        public Vector3 uncalibratedAcceleration;
+
+        [InputControl(name = "uncalibratedAngularVelocity", layout = "Vector3", format = "VEC3", noisy = true, displayName = "Uncalibrated Angular Velocity")]
+        public Vector3 uncalibratedAngularVelocity;
+
         public enum Button
         {
             Up = 0,
@@ -108,5 +118,5 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
                 buttons &= (uint)~bit;
         }
     }
-    #endif
+#endif
 }

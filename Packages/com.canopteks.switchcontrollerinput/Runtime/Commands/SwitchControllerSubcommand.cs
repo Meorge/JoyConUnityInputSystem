@@ -63,12 +63,12 @@ namespace UnityEngine.InputSystem.Switch
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.GetOnlyControllerState;
     }
-    
+
     public class SwitchControllerRequestInfoSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.RequestDeviceInfo;
     }
-    
+
     public class SwitchControllerBluetoothManualPairingSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.BluetoothManualPairing;
@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem.Switch
         public byte ValueByte = 0x01;
         protected override byte[] GetArguments() => new byte[0x1] { ValueByte };
     }
-    
+
     public class SwitchControllerSetImuEnabledSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.EnableDisableIMU;
@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.Switch
         public bool Enabled = true;
         protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
     }
-    
+
     public class SwitchControllerSetVibrationEnabledSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.EnableDisableVibration;
@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.Switch
         public bool Enabled = true;
         protected override byte[] GetArguments() => new byte[0x1] { (byte)(Enabled ? 0x01 : 0x00) };
     }
-    
+
     public class SwitchControllerReadSPIFlashSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.SPIFlashRead;
@@ -117,7 +117,33 @@ namespace UnityEngine.InputSystem.Switch
             Length = withLength;
         }
     }
-    
+
+    public class SwitchControllerWriteSPIFlashSubcommand : SwitchControllerBaseSubcommand
+    {
+        public override byte SubcommandID => (byte)SubcommandIDEnum.SPIFlashWrite;
+
+        public uint Address = 0x0;
+        public byte Length = 0x0;
+        public byte[] Data;
+
+        protected override byte[] GetArguments()
+        {
+            var addrAsBytes = BitConverter.GetBytes(Address);
+            byte[] output = new byte[5 + Length];
+            Array.Copy(addrAsBytes, output, 4);
+            output[4] = Length;
+            Array.Copy(Data, 0, output, 5, Length);
+            return output;
+        }
+
+        public SwitchControllerWriteSPIFlashSubcommand(uint atAddress, byte[] data)
+        {
+            Address = atAddress;
+            Length = (byte)data.Length;
+            Data = data;
+        }
+    }
+
     public class SwitchControllerSetLEDSubcommand : SwitchControllerBaseSubcommand
     {
         public override byte SubcommandID => (byte)SubcommandIDEnum.SetPlayerLights;
@@ -147,10 +173,10 @@ namespace UnityEngine.InputSystem.Switch
 
     public class SwitchControllerInputModeSubcommand : SwitchControllerBaseSubcommand
     {
-        public override byte SubcommandID => (byte) SubcommandIDEnum.SetInputReportMode;
+        public override byte SubcommandID => (byte)SubcommandIDEnum.SetInputReportMode;
         public InputModeEnum InputMode = InputModeEnum.Standard;
 
-        protected override byte[] GetArguments() => new byte[1] {(byte) InputMode};
+        protected override byte[] GetArguments() => new byte[1] { (byte)InputMode };
 
         public SwitchControllerInputModeSubcommand(InputModeEnum mode)
         {

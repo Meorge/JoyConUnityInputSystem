@@ -8,17 +8,23 @@ public class GyroRotate : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
+        SwitchControllerHID.current.ReadUserIMUCalibrationData();
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (SwitchControllerHID.current.buttonSouth.wasPressedThisFrame)
+        if (SwitchControllerHID.current.buttonSouth.wasReleasedThisFrame)
         {
-            // SwitchControllerHID.current.ReadIMUCalibrationData();
-            SwitchControllerHID.current.SetIMUEnabled(true);
+            SwitchControllerHID.current.ReadUserIMUCalibrationData();
+            // SwitchControllerHID.current.SetIMUEnabled(true);
         }
-        transform.eulerAngles = SwitchControllerHID.current.orientation.ReadValue() * 0.1f;
+        if (SwitchControllerHID.current.buttonEast.wasReleasedThisFrame)
+        {
+            SwitchControllerHID.current.ResetYaw();
+        }
+        transform.localRotation = SwitchControllerHID.current.deviceRotation.ReadValue();
     }
 }

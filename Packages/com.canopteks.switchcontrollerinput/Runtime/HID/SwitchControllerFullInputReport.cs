@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, SpecificControllerTypeEnum controllerType, Vector3 currentOrientation)
+        public SwitchControllerVirtualInputState ToHIDInputReport(ref SwitchControllerHID.CalibrationData calibData, SpecificControllerTypeEnum controllerType)
         {
             var leftStickVec = Vector2.zero;
             var rightStickVec = Vector2.zero;
@@ -84,14 +84,19 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             }
 
             // Debug.Log($"Creating input stuff: right stick is {rightStickVec}");
+            Vector3 uncalibratedAccel = imuData0ms.UncalibratedAcceleration;
+            Vector3 uncalibratedGyro = imuData0ms.UncalibratedGyro;
+            Vector3 calibratedAccel = imuData0ms.CalibratedAcceleration(ref calibData.imuCalibData);
+            Vector3 calibratedGyro = imuData0ms.CalibratedGyro(ref calibData.imuCalibData);
+
             var state = new SwitchControllerVirtualInputState
             {
                 leftStick = leftStickVec,
                 rightStick = rightStickVec,
-                // TODO: Calibrate these bad boys
-                acceleration = imuData0ms.UncalibratedAcceleration,
-                orientation = currentOrientation + imuData0ms.UncalibratedGyro,
-                angularVelocity = imuData0ms.UncalibratedGyro
+                uncalibratedAcceleration = uncalibratedAccel,
+                uncalibratedAngularVelocity = uncalibratedGyro,
+                acceleration = calibratedAccel,
+                angularVelocity = calibratedGyro
             };
 
             state.Set(SwitchControllerVirtualInputState.Button.Y, (rightButtons & 0x01) != 0);
@@ -133,35 +138,25 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
         public Vector3 CalibratedAcceleration(ref SwitchControllerHID.IMUCalibrationData calib)
         {
-            // var coeffs = new Vector3()
-            // {
-            //     x = (float)(1.0f / (float)(0x4000 - uint16_to_int16(cal_acc_origin))) * 4.0f
-            // };
+            if (calib.accelSensitivity.x == 0)
+                return UncalibratedAcceleration;
 
-            var output = new Vector3();
-            return output;
+            float accel_x = (accelX - (short)calib.accelBase.x) * calib.accelCoeff.x;
+            float accel_y = (accelY - (short)calib.accelBase.y) * calib.accelCoeff.y;
+            float accel_z = (accelZ - (short)calib.accelBase.z) * calib.accelCoeff.z;
+
+            return new Vector3(accel_x, accel_y, accel_z);
         }
 
         public Vector3 CalibratedGyro(ref SwitchControllerHID.IMUCalibrationData calib)
         {
-            var offset = calib.gyroBase.ToVector3Int16();
-            var coeff = calib.gyroSensitivity;
+            if (calib.gyroSensitivity.x == 0)
+                return UncalibratedGyro;
 
-            float gyro_x = 0;
-            float gyro_y = 0;
-            float gyro_z = 0;
-            
-            // gyro X
-            var gyro_cal_coeff_x = (float)(816.0f / (float)(coeff.x - offset.x));
-            gyro_x = (gyro1 - offset.x) * gyro_cal_coeff_x;
+            float gyro_x = (gyro1 - (short)calib.gyroBase.x) * calib.gyroCoeff.x;
+            float gyro_y = (gyro2 - (short)calib.gyroBase.y) * calib.gyroCoeff.y;
+            float gyro_z = (gyro3 - (short)calib.gyroBase.z) * calib.gyroCoeff.z;
 
-            // gyro Y
-            var gyro_cal_coeff_y = (float)(816.0f / (float)(coeff.y - offset.y));
-            gyro_y = (gyro2 - offset.y) * gyro_cal_coeff_y;
-
-            // gyro Z
-            var gyro_cal_coeff_z = (float)(816.0f / (float)(coeff.z - offset.z));
-            gyro_z = (gyro3 - offset.z) * gyro_cal_coeff_z;
 
             return new Vector3(gyro_x, gyro_y, gyro_z);
         }
